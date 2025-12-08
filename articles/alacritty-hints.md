@@ -3,7 +3,7 @@ title: "Alacritty Hints と tmux でターミナル操作を快適にする"
 emoji: "⌨️"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: [Alacritty, tmux, Nix]
-published: false
+published: true
 ---
 
 # はじめに
@@ -66,7 +66,7 @@ Nix ではビルドに失敗した時に `nix log` サブコマンドを利用�
 ## Hints とは
 
 Hints とは、ターミナルに表示されているテキストを正規表現で検索し、マッチしたテキストを他のプロセスに引数として渡せる機能です。
-具体的には、正規表現によって表示されているテキストを絞り込み、Vim プラグインの [easy-motion](https://github.com/easymotion/vim-easymotion) のように対象のテキストを選択し、あらかじめ設定ファイルで指定したコマンドの引数として渡します。
+具体的には、正規表現によって表示されているテキストを絞り込み、Vim プラグインの [Easymotion](https://github.com/easymotion/vim-easymotion) のように対象のテキストを選択し、あらかじめ設定ファイルで指定したコマンドの引数として渡します。
 例として、`Ctrl+Shift+O` によって URL を開くヒントの定義を見てみましょう。
 
 ```toml
@@ -90,7 +90,7 @@ URLの定義とは異なりかなり簡略化されていますが、大抵の�
 ![](https://storage.googleapis.com/zenn-user-upload/7f8433482c84-20251208.png =500x)
 *3つの URL がマッチして、それぞれ k, f, j とハイライトされている*
 
-Ctrl+Shift+O を入力すると、先述のように easy-motion と同様のハイライトが行われます。
+Ctrl+Shift+O を入力すると、先述のように Easymotion と同様のハイライトが行われます。
 このあと、「k」を入力すれば `echo https://momee.mt` に含まれる URL が、「f」を入力すれば標準出力に出力された URL が、「j」を入力すれば nixpkgs のリモート URL が選択され、設定ファイルの `command` で入力したコマンドの引数として渡されます。
 すなわち、`open https://momee.mt` を Alacritty が実行することで、デフォルトブラウザで指定した URL の Web サイトを閲覧することができます。
 
@@ -166,7 +166,7 @@ tmux send-keys "$cmd" Enter
 *コマンドが実行された*
 
 さらに短縮することができました。
-`nix log` は単なる一例で、他には私はターミナル上のパスが示すファイルを Neovim で開くヒントも書いています。
+`nix log` は単なる一例で、他にはターミナル上のパスが示すファイルを Neovim で開くヒントも書いています。
 ターミナルに表示された文字列をコピーすることはソフトウェア開発では避けられない操作なので、もしマウスやトラックパッドに手が伸びる瞬間があればその度にヒントを追加していくのも良いのではないでしょうか。
 
 # home-manager による設定
@@ -184,7 +184,7 @@ Nix は本来、パッケージビルドのための DSL とパッケージマ�
 
 最初に `open` コマンドを用いたアプリケーションの起動を行うヒントをお見せしましたが、Linux ユーザは `xdg-open` を使用する必要があります。
 素直に TOML で管理すれば OS ごとに設定ファイルを分けなければいけません。
-一方、Nix では nixpkgs が `pkgs.stdenv.isLinux`、`pkgs.stdenv.isDarwin` によりホスト OS を判定するための関数が提供しているため、以下のように記述できます。
+一方、Nix では nixpkgs がホスト OS を判定するための関数である `pkgs.stdenv.isLinux`、`pkgs.stdenv.isDarwin` を提供しているため、以下のように記述できます。
 
 ```nix
 {pkgs, ...}: {
@@ -259,7 +259,7 @@ Or run it once with:
 
 $ nix-shell -p go
 $ go version
-go version go1.25.4 darwin/arm64 
+go version go1.25.4 darwin/arm64
 ```
 
 # おわりに

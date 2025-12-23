@@ -341,7 +341,7 @@ https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/shells/z
 
 普段使い用のシェル関数をいくつか定義しています。zsh は環境変数 `$fpath` に存在するファイルのシェル関数を自動で読み込む機能があり、これを利用しています。
 
-```nix :nix/profiles/hm/programs/shells/zsh/default.nix 
+```nix :nix/profiles/hm/programs/shells/zsh/default.nix
 programs.zsh = {
   completionInit = ''
     typeset -U fpath
@@ -349,7 +349,7 @@ programs.zsh = {
     autoload -U compinit
     compinit -i
   '';
-  
+
   initContent = ''
     autoload -Uz nr mkcd
   '';
@@ -382,7 +382,23 @@ https://zsh.sourceforge.io/Doc/Release/zsh_toc.html
 
 エディタには Neovim と VSCode を利用しています。主に Markdown や Typst など、プレビューを見ながら文章を書きたい場合には VSCode を利用していて、それ以外は Neovim を利用しています。
 
-## ターミナルマルチプレクサの設定（tmux）
+## 🚧 ターミナルマルチプレクサの設定（tmux）
+
+ターミナルマルチプレクサは1つのターミナルエミュレータの中で、複数のターミナルを作成して切り替えたり、画面を分割して並べて表示したりするためのソフトウェアです。作業状態をセッションとして保存できるので、SSH接続が切れてもセッション内で動作しているプロセスを停止することなく、後から同じ状態に復帰することができます。私は [tmux](https://github.com/tmux/tmux/wiki) というターミナルマルチプレクサを使っています。
+
+https://github.com/tmux/tmux/wiki
+
+最も素朴なターミナルマルチプレクサとして [GNU Screen]() がある他、最近では [Zellij](https://github.com/zellij-org/zellij) も注目されています。Zellij は現代的なターミナルワークスペースで、自由なレイアウトを組むことができ、プラグインシステムとして [WebAssembly]() を採用しています。3年前に初めて SSH 接続を切らさないために Screen を使って便利さを実感してから、tmux を使い始めました。Zellij も気になっていますが、現状では tmux の操作に不満を感じていないことと、個人的な経験として WebAssembly のプラグインシステムが満足に動作するのか疑問を持っていることもあり移行していません。来年はいくつかプラグインを試したり作ってみたりして、tmux よりも良いと確信を持てたら移行してみたいなとも思っています。
+
+Home Manager が提供する tmux の設定は非常にシンプルで、他のツールと同様に [`programs.tmux.*`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.tmux.enable) を設定しますが、主な設定は [`programs.tmux.extraConfig`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.tmux.extraConfig) に tmux の設定ファイルである `tmux.conf` に記述する内容を書くことになります。
+
+### 基本的な設定
+
+https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/tmux/default.nix
+
+### `extraConfig` の内容
+
+https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/tmux/tmux.conf
 
 ## ✅ ターミナルエミュレータの設定（Alacritty）
 
@@ -702,11 +718,105 @@ https://man.openbsd.org/sshd_config.5
 自宅の NixOS サーバは外から接続したい場合があります。私はネットワークを提供するタイプの集合住宅に住んでおり、ネットワーク回線を別に引いていないためグローバル IP アドレスからサービスを公開することができません。そこで、[Cloudflare]() が提供する [Cloudflare Tunnel]() を通すことでアクセスできるようにしています。
 NixOS は、`services.cloudflared.*` で Cloudflare Tunnel が設定できるオプションを公開しています。
 
-## NixOS module を定義する
+## ✅ NixOS module を定義する
 
-## 壁紙を定期的に切り替えるサービス（set-wallpapers）
+システム構成やホーム構成を単に共通化したいだけの場合はファイルに切り出して `imports` にファイルパスの配列を渡すことで展開されます。一方で、ホストやユーザごとに共通化した内容を切り替えたい場合、具体的に言えば引数を渡したい場合があります。
+その場合は `imports` で実現することは難しく、モジュールを作成する必要があります。
 
-## Docker イメージのビルド
+https://nixos.wiki/wiki/NixOS_modules
+
+これまでは Home Manager や nix-darwin 等が提供するオプションに対して、何らかの値を割り当ててきました。それに対して、NixOS module は**オプションを定義する手段**を提供します。NixOS module は次の3つのパーツに分類できます。
+
+```nix
+{
+  imports = []; # import したいモジュールのパスをリストで渡す
+  options = {}; # オプションの定義
+  config = {};  # オプションの定義を使って具体的に評価する値
+}
+```
+
+`imports` は、これまで使ってきた `imports` と同様で、評価したい他のモジュールのパスをリストで渡します。基本的には設定の共通化に用いてきました。`options` は、オプションの定義です。すなわち、これまで出てきた `programs.zsh.enable` が `bool` 型の値を受け取る、`programs.zsh.initContent` が `string` 型の値を受け取る、などオプション1つ1つの性質について定義します。`config` は、そのモジュールで定義されたオプションが使用された際に、実際にどのような値に評価されるかを定義します。たとえば、`programs.zsh.enable` が `true` になった場合、Home Manager はユーザ環境で `zsh` が使えるようにインストールしてパスを通します。そのように具体的な評価を定義します。
+では、具体例を見てみましょう。私は Home Manager や nix-darwin などの既存のモジュールに欲しい設定がなかった場合には NixOS module を定義するようにしています。以下に、[GNU Wget](https://www.gnu.org/software/wget/) のための NixOS module を示します。
+
+https://github.com/momeemt/config/blob/develop/nix/modules/home/programs/wget/default.nix
+
+これは、GNU Wget を XDG Base Directory に準拠させるために書きました。詳細を見ていきましょう。
+
+### options
+
+まずオプション名を決める必要があります。サービスではないソフトウェアの設定を行うので、Home Manager に倣って `programs.wget` としたいですが、将来的に Home Manager などのより著名なツールと競合する可能性があります。また、オプション名の命名規則を完全に一致させてしまうと、どれが自分で定義したオプションであるか見ただけでは判断できません。
+そこで、`site.programs.wget` のように自分専用のモジュールであることが分かるようにしています。命名の仕方にルールはないので、`my.programs.wget` や、ユーザ名を付けて `momeemt.programs.wget` のようにしている方もいます。
+
+オプションの性質は、`options.<module-name>.<field>` に代入する `mk` 系のオプションビルダーによって作成されるオプション属性セットによって規定されます。たとえば、[`lib.mkOption`](https://noogle.dev/f/lib/mkOption) 、[`lib.mkEnableOption`](https://noogle.dev/f/lib/mkEnableOption) 、[`lib.mkPackageOption`](https://noogle.dev/f/lib/mkPackageOption) などが存在します。
+`lib.mkOption` は最も基本的なオプションビルダーで、その他のオプションは特定のオプションを簡単に書くためのラッパーです[^not-only-easy-mkHogeOption]。`enable` オプションは大抵の場合、 `bool` 型であり、デフォルト値が `false` に設定されます。そこで `lib.mkEnableOption` を使えば、`description` を渡すだけでオプションを作成できます。
+
+[^not-only-easy-mkHogeOption]: `enable` や `package` など、慣習的にどのような性質を持っているかが期待されるオプション名はいくつか存在します。このようなラッパーは簡単にオプションが適用できるだけでなく、出すべきではない独自性を出さないためにも重要です。オプションを定義する前に、オプションビルダーの種類やどのような性質のオプションに使われるべきなのかを知るためにマニュアルに通した方が良いでしょう。現に、それを怠った筆者は、`lib.mkPackageOption` を使わずに `package` オプションを定義してしまっています
+
+### config
+
+前節で、`site.programs.wget.*` オプションをいくつか定義しました。今度は、これらにセットされる値を使って実際にどのような値を評価するかを決めていきます。まず、[`lib.mkIf`](https://noogle.dev/f/lib/mkIf) を用いて、`site.programs.wget.enable` が `false` である場合には空の属性セットを返すようにします。
+次に、`true` である場合には以下の処理が行われるように属性セットを構成します。
+
+- `wget` をユーザから使えるようにする
+- 環境変数 `WGETRC` にパスを設定する
+- `wgetrc` ファイルに、`hsts-file` のパスと追加設定を含めて規定のパスに保存する
+
+仮にこのモジュールが依存としてどのモジュールも要求しないなら、上のような処理が行われる属性セットを構成するのは少し大変です。しかし、今は Home Manager に存在していないソフトウェアの設定をホーム構成に反映させることを目的にしているので、Home Manager のオプションを気兼ねなく利用できます。これらは [`home.packages`](https://nix-community.github.io/home-manager/options.xhtml#opt-home.packages) 、[`home.sessionVariables`](https://nix-community.github.io/home-manager/options.xhtml#opt-home.sessionVariables)、[`home.file.<name>.text`](https://nix-community.github.io/home-manager/options.xhtml#opt-home.file._name_.text) によって簡単に実現できます。
+
+ここまでで、NixOS module を構成することができました。あとは、自分の dotfiles から自作のモジュールを import しておき、ホーム構成（`nix/home/`）等で設定すれば適用できます。
+過去に、tmux の NixOS module を作成した際のスライドがあり、どちらかといえば tmux 側の解説に寄っていますが興味があればご覧ください。
+
+https://speakerdeck.com/momeemt/tmux-nixnoshi-zhuang-wotong-sitexue-bunixosmoziyuru
+
+## ✅ 壁紙を定期的に貼り替えるサービス（set-wallpapers）
+
+前節で NixOS module を定義する方法について見てきました。本節ではその続きとして、自作スクリプトを定期実行サービスとして登録し、 NixOS module によって運用する例を紹介します。対象は macOS + nix-darwin です。後述の通り、AppleScript を利用するため Linux では動作しません。
+私はジブリ映画が好きなのですが[^ghibli]、デスクトップ環境の壁紙を STUDIO GHIBLI が配布している画像に設定しています。
+
+[^ghibli]: 好きではあるのですが本格的にジブリファンと言えるほど詳しいわけでもありません。すみません
+
+https://www.ghibli.jp/info/013251/
+
+macOS は OS のバージョン更新などで壁紙設定がリセットされることがあります。そこで、壁紙の設定も Nix 側の構成に含めて再現できるようにしたいと考え、壁紙を定期的に切り替える仕組みを作りました。このサービスがやっていることは単純で、次の2ステップです。
+
+1. 画像一覧から壁紙候補を1枚選ぶ
+1. その画像を macOS の壁紙として設定する
+
+### 壁紙を貼り替えるスクリプト
+
+壁紙の設定は [AppleScript](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptX/AppleScriptX.html)、壁紙の選択はシェルスクリプトで行い、組み合わせています。
+
+https://github.com/momeemt/config/blob/develop/nix/modules/host/services/set-wallpapers/set.applescript
+
+AppleScript を使っている理由は、依存ライブラリが不要で最も簡単に壁紙を変更できるためです。実に7年ぶりです[^seven-years-ago]。
+
+[^seven-years-ago]: 当時は英単語帳を [Numbers](https://www.apple.com/jp/numbers/) で管理していて、特定の条件を満たすテキストの色を変えるのに使っていた記憶があります
+
+https://github.com/momeemt/config/blob/develop/nix/modules/host/services/set-wallpapers/main.sh
+
+Nix 側から環境変数 `WALLPAPERS` を介して壁紙候補の画像パス一覧を `main.sh` に渡します。`main.sh` はその中からランダムに画像を1枚選び、 `set.applescript` を実行して壁紙を変更します。また、連続で同じ画像が選択されるのは避けたいので、`~/Library/Application Support/set-wallpapers` 配下に前回選んだ壁紙を状態ファイルとして保存し、次回実行時に参照するようにしています。
+
+### パッケージの定義とサービスへの登録
+
+上のスクリプト群は、`pkgs.writeShellScript`によって Nix の derivation として扱えるようにしています。そうすることで、スクリプトが `/nix/store` 配下にコピーされるため dotfiles リポジトリ内のファイルパスや作業ツリーの状態に依存しなくなります。したがって、適用後にリポジトリの内容が変わっても、サービスが参照する実体は変わりません。
+
+https://github.com/momeemt/config/blob/develop/nix/modules/host/services/set-wallpapers/default.nix
+
+壁紙の貼り替えを AppleScript で行っているため、この NixOS module も nix-darwin からのみ呼ばれることを前提としています。nix-darwin は、macOS 標準のサービス管理ソフトウェアである [launchd](https://github.com/apple-oss-distributions/launchd/tree/launchd-842.92.1) へユーザサービスを登録するための [`launchd.user.agents`](https://nix-darwin.github.io/nix-darwin/manual/#opt-launchd.user.agents) が用意されています。この設定で [`launchd.user.agents.<name>.serviceConfig.StartInterval`](https://nix-darwin.github.io/nix-darwin/manual/#opt-launchd.user.agents._name_.serviceConfig.StartInterval) を `300`（秒）に指定すると、ユーザ領域の launchd が5分ごとにスクリプトを実行します。結果として、ログイン後は壁紙が定期的に切り替わるようになります。
+
+## 🚧 Docker イメージのビルド
+
+あまり整備できていないのですが、GitHub Actions でホーム構成を適用した Docker イメージをビルドしています。dotfiles を公開しているユーザは、自分の dotfiles をインストールするための方法も併せて整備している場合があります。たとえば、[mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) は、Git を使ったインストール方法や、Git を使わずにインストールするためのスクリプトを紹介しています。
+
+https://github.com/mathiasbynens/dotfiles
+
+```sh :mathiasbynens/dotfiles を Git を使わずにインストールする
+cd; curl -#L https://github.com/mathiasbynens/dotfiles/tarball/main | tar -xzv --strip-components 1 --exclude={README.md,bootstrap.sh,.osx,LICENSE-MIT.txt}
+```
+
+しかし、Nix でシステム構成やホーム構成を管理する場合には、ユーザ名やシークレットなど、その dotfiles を整備したユーザ固有の情報が含まれることがあるため、そのまま他のユーザが使い回すことはできません[^dotfiles-by-others]。また、システム構成の適用を巻き戻すことは、ホーム構成の適用を巻き戻すよりも少し大変です。そこで、そのようなユーザ固有の情報を抜いてホーム構成のみを適用したコンテナイメージを固め、配布することで、部分的にではありますが、自分の環境を汚すことなく誰でも簡単に試せるようにしています。
+
+[^dotfiles-by-others]: そもそも他のユーザの dotfiles をそのまま使いたくなることはあるのでしょうか。私はそう思ったことは正直一度もありませんが、試したくなることもあるのかもしれません
 
 ## `terraform/`の構成
 

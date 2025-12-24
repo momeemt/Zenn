@@ -804,9 +804,15 @@ https://github.com/momeemt/config/blob/develop/nix/modules/host/services/set-wal
 
 壁紙の貼り替えを AppleScript で行っているため、この NixOS module も nix-darwin からのみ呼ばれることを前提としています。nix-darwin は、macOS 標準のサービス管理ソフトウェアである [launchd](https://github.com/apple-oss-distributions/launchd/tree/launchd-842.92.1) へユーザサービスを登録するための [`launchd.user.agents`](https://nix-darwin.github.io/nix-darwin/manual/#opt-launchd.user.agents) が用意されています。この設定で [`launchd.user.agents.<name>.serviceConfig.StartInterval`](https://nix-darwin.github.io/nix-darwin/manual/#opt-launchd.user.agents._name_.serviceConfig.StartInterval) を `300`（秒）に指定すると、ユーザ領域の launchd が5分ごとにスクリプトを実行します。結果として、ログイン後は壁紙が定期的に切り替わるようになります。
 
-## 🚧 Docker イメージのビルド
+### 適用
 
-あまり整備できていないのですが、GitHub Actions でホーム構成を適用した Docker イメージをビルドしています。dotfiles を公開しているユーザは、自分の dotfiles をインストールするための方法も併せて整備している場合があります。たとえば、[mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) は、Git を使ったインストール方法や、Git を使わずにインストールするためのスクリプトを紹介しています。
+ここまで作成したモジュールを、次のように適用しています。画像を置かずに [`pkgs.fetchurl`](https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-fetchers-fetchurl) で入手しているので、不必要にリポジトリサイズが大きくならない点を気に入っています。
+
+https://github.com/momeemt/config/blob/develop/nix/hosts/uguisu/wallpapers.nix
+
+## ✅ Docker イメージのビルド
+
+GitHub Actions でホーム構成を適用した Docker イメージをビルドしています。dotfiles を公開しているユーザは、自分の dotfiles をインストールするための方法も併せて整備している場合があります。たとえば、[mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) は、Git を使ったインストール方法や、Git を使わずにインストールするためのスクリプトを紹介しています。
 
 https://github.com/mathiasbynens/dotfiles
 
@@ -814,17 +820,167 @@ https://github.com/mathiasbynens/dotfiles
 cd; curl -#L https://github.com/mathiasbynens/dotfiles/tarball/main | tar -xzv --strip-components 1 --exclude={README.md,bootstrap.sh,.osx,LICENSE-MIT.txt}
 ```
 
-しかし、Nix でシステム構成やホーム構成を管理する場合には、ユーザ名やシークレットなど、その dotfiles を整備したユーザ固有の情報が含まれることがあるため、そのまま他のユーザが使い回すことはできません[^dotfiles-by-others]。また、システム構成の適用を巻き戻すことは、ホーム構成の適用を巻き戻すよりも少し大変です。そこで、そのようなユーザ固有の情報を抜いてホーム構成のみを適用したコンテナイメージを固め、配布することで、部分的にではありますが、自分の環境を汚すことなく誰でも簡単に試せるようにしています。
+しかし、Nix でシステム構成やホーム構成を管理する場合には、ユーザ名やシークレットなど、その dotfiles を整備したユーザ固有の情報が含まれることがあるため、そのまま他のユーザが使い回しづらいことが多いです[^dotfiles-by-others]。また、システム構成はホスト全体に影響するため、ホーム構成よりも試すコストやリスクが大きいです。そこで、そのようなユーザ固有の情報を抜いてホーム構成のみを適用したコンテナイメージを固め、配布することで、部分的にではありますが、自分の環境を汚すことなく誰でも簡単に試せるようにしています。
 
 [^dotfiles-by-others]: そもそも他のユーザの dotfiles をそのまま使いたくなることはあるのでしょうか。私はそう思ったことは正直一度もありませんが、試したくなることもあるのかもしれません
 
-## `terraform/`の構成
+### コンテナの制約
 
-## 仮想マシンを作成する
+Docker コンテナは仮想マシンではなく、ホスト OS のカーネルを共有してプロセス空間などを隔離する仕組みです。したがって、カーネルやブートローダ、カーネルモジュール、デバイス管理、ファイルシステムのマウント、`sysctl`、ネットワーク設定のうち、ホスト全体に影響するもの、および特権が必要な操作はコンテナ内だけで完結して変更できません。変更には、`--privileged` 等のオプションが必要になり、十分に環境を隔離することができなくなります。
+システム構成は、systemd サービス、`/etc` の生成、ユーザ・グループ管理、cgroups、ログインセッション、ネットワーク、デバイスなど OS 全体を対象にして状態を作り替えます。一方で、多くの Docker イメージは systemd を PID 1 として動かさない前提で作られるため、この種のシステム構成の適用はそのまま行うことができません。
+一方で、Home Manager のホーム構成は基本的にホームディレクトリ以下のファイル配置やシンボリックリンクの生成が中心で、カーネル機能に依存しません。そのため、コンテナではシステム構成ではなくホーム構成のみを適用するという割り切りが必要です。ただし、Home Manager の設定の中にも systemd のユーザサービスなどを前提にするものがあり、コンテナでは有効化できない項目があることには注意が必要です。
+
+### コンテナイメージの作成
+
+derivation をそのままコンテナに固める際は、[`pkgs.dockerTools.buildImage`](https://ryantm.github.io/nixpkgs/builders/images/dockertools/) が便利です。指定した derivation の依存だけを取り込んだイメージを作れるため、Dockerfile によってイメージを作成した場合よりも構成要素を絞り込みやすく、コンテナイメージを最小化するために非常に便利です。しかし、Home Manager は activation によってホームディレクトリ以下へリンクやファイルを配置するため、`buildImage` でストアのパスをコピーするだけでは適用済みの状態にはなりません。そこで、ホーム構成を適用するような `RUN` 命令を含めた Dockerfile を作成してコンテナイメージを作成します。
+
+https://github.com/momeemt/config/blob/develop/.devcontainer/Dockerfile
+
+Nix のインストールを行い、dotfiles をコピーし、`nix run` からホーム構成を適用しています。1つ注意点として、GitHub Actions 等で docker buildx の QEMU エミュレーション経由で aarch64 をビルドしている場合、seccomp BPF のロードが `Invalid argument` で失敗する例があります。そこでインストールを実行する前に `/etc/nix/nix.conf` に `filter-syscalls = false` を設定することで回避できるという例がありますが、これはセキュリティ上の影響があるため注意が必要です。
+
+https://github.com/NixOS/nix/issues/5258
+
+しかしこれはバージョンや環境の差によって上手くいくかどうかが変わる未解決な問題であり、私は上手くいかなかったため（`filter-syscalls` のオプション追加行を残したままですが）GitHub Actions の `matrix` を使って各アーキテクチャ向けのイメージをネイティブ実行でビルドしています。
+
+また、適用するホーム構成はコンテナイメージ用に別で用意しています。
+
+https://github.com/momeemt/config/blob/develop/nix/home/example/default.nix
+
+### コンテナイメージの公開
+
+Docker イメージは、GitHub Container Registry (GHCR) で[公開](https://github.com/momeemt/config/pkgs/container/config)しています。現時点では明確なバージョン管理をしていないので、`develop` ブランチを更新するたびにデバッグ用にイメージをビルドしています。来年は nixpkgs のように、`yy.mm` バージョン（2025年11月のリリースは、`25.11`）で管理していきたいと思っています。
+
+https://github.com/momeemt/config/blob/develop/.github/workflows/image.yaml
+
+### コンテナイメージの利用
+
+公開されているコンテナイメージは、以下のコマンドを実行することで入手できます。
+
+```sh
+docker pull ghcr.io/momeemt/config:unstable
+```
+
+## ✅ Terraform
+
+Terraform は、クラウドや SaaS の設定をコードで管理するための Infrastructure as Code（IaC）ツールです。HCL（HashiCorp Configuration Language）でどのリソースをどんな設定で作るかを宣言し、`terraform plan` で変更差分を確認した上で、`terraform apply` で実際に反映します。外部サービスは provider を通して API 操作として適用されます[^exclude-sops]。適用結果は state として保存され、次回の差分計算に使われます。Terraform は provider を通じて外部サービスの現在状態を読み取り、宣言した設定との差分を確認できるため、ローカル環境の構成管理が中心の Nix と役割分担しやすいです。今年利用した provider は以下の通りです。
+
+[^exclude-sops]: ただし、後述する sops provider は SaaS の API ではなく、sops で暗号化したファイルを Terraform から参照するための provider です。そのようなローカル操作を行う provider も存在します
+
+- sops
+- Cloudflare
+- GitHub
+
+### Cloudflare
+
+Terraform から Cloudflare の各種サービスや設定を適用できます。ドキュメントについても Terraform Registry に付属しているので逐一確認できます。
+
+https://registry.terraform.io/providers/cloudflare/cloudflare
+
+基本的に DNS レコードの管理を移しました。`cloudflare_dns_record` によって、レコードを作成できます。ダッシュボードから過去に追加した、現在は使われていないレコードを整理するきっかけにもなりました。現在はまだ Cloudflare Tunnel / Zero Trust の設定や、Workers & Pages については Terraform に移せていないので、今後の課題としています。
+
+https://github.com/momeemt/config/blob/develop/terraform/cloudflare.tf
+
+### GitHub
+
+SSH 公開鍵、および GPG 公開鍵の反映を移しました。マシンが増えてからコミットへの署名を設定済みのマシンとそうでないマシンが混在しておりきちんと把握できていませんでしたが、テキストベースの設定に移行してからはその見通しが良くなりました。
+
+https://github.com/momeemt/config/blob/develop/terraform/github.tf
+
+GitHub provider からは、リポジトリやGitHub Actions、Issues のラベルの設定なども行うことができます。特にブラウザから設定した GitHub Actions のシークレットはどのリポジトリに何のシークレットがあるのか追いづらく、値も後から確認できないため困ることが多いので、移行する価値があると感じています。
+
+https://registry.terraform.io/providers/integrations/github/latest
+
+### sops
+
+Terraform からシークレットを扱う際も、sops を利用しています。[carlpett/terraform-provider-sops](https://github.com/carlpett/terraform-provider-sops) を使っていて、暗号化済みの YAML ファイルを渡すだけで、Terraform 内の変数としてシークレットが扱えるようになるのでとても便利です。
+
+https://github.com/carlpett/terraform-provider-sops
+
+provider を扱う際に必要な API トークンや、その他 VCS でそのまま扱うことが望ましくない情報については sops 経由で扱うようにしています。
+
+https://github.com/momeemt/config/blob/develop/terraform/sops.tf
+
+### ディレクトリごとに `devShell` を切り替える
+
+余談ですが、`.envrc` にスクリプトを書いてディレクトリごとに `devShell` が自動で切り替わるようにしています。
+
+```sh :.envrc
+# This file is auto-generated by ./assets/scripts/env.sh
+source_url "https://raw.githubusercontent.com/nix-community/nix-direnv/3.0.7/direnvrc" "sha256-bn8WANE5a91RusFmRI7kS751ApelG02nMcwRekC/qzc="
+watch_dir nix/flakes
+
+if [ "${CHILD_ENVRC-0}" != "1" ]; then
+  use flake
+fi
+```
+
+まず、デフォルトの `devShell` に入るための `.envrc` を作成します。基本的にはプロジェクトルートの `flake.nix` や `flake.lock` などが変更された場合のみ、direnv 環境の更新が行われるため、モジュールの分割ファイルを入れている `nix/flakes` を監視対象にしています。次に、`CHILD_ENVRC` が `1` でない場合には `use flake` を実行しています。
+
+```sh :terraform/.envrc
+# This file is auto-generated by ./assets/scripts/env.sh
+export CHILD_ENVRC=1
+source_up
+unset CHILD_ENVRC
+
+watch_file devShell.nix
+use flake ../#terraform
+```
+
+異なる `devShell` に入りたいディレクトリでは、`CHILD_ENVRC` を定義してから `source_up` で親の（すなわち先ほどの）`.envrc` を呼び出します。次に、個別の `devShell` を定義しているファイルを監視対象にしてから、目的の `devShell` に入ります。このように `.envrc` を書き分けることで、ディレクトリごとに異なる開発環境に入ることができるため、デフォルトの `devShell` が必要以上に肥大化することを防げます。
+
+## 🚧 仮想マシンを作成する
+
+この節では、自宅に Kubernetes クラスタを導入するために仮想マシンを作成する方法について触れます。まず、NixOS で Kubernetes クラスタを構築すること自体は可能ですが、一般的な kubeadm ベースの手順をそのまま適用するのは難しいです。一般的には `kubeadm init` や `kubeadm join` を中心に設計されており、kubelet の設定や証明書などの管理も `kubeadm` が握っています。一方で、NixOS には `services.kubernetes` のように apiserver、controllerManager、scheduler、kubelet、etcd などをモジュールとして直接構成する仕組みがあり、kubeadm の手順や生成物とは異なります。特にクリティカルなのは周辺コンポーネントが特定のパスや配置を要求することがあり、NixOS では追加の設定や activation script が必要になります。
+一方で、Kubernetes クラスタを NixOS 環境で実現するためのツールはいくつか提案されています。
+
+- [`services.kubernetes`](https://nixos.wiki/wiki/Kubernetes)
+- [`services.k3s`](https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/networking/cluster/k3s/README.md)
+  - 軽量な Kubernetes ディストリビューションである [K3s](https://k3s.io/) を動作させるためのモジュール
+- Nix と Kubernetes を組み合わせるコミュニティツール
+  - [kubenix](https://kubenix.org/)
+  - [kubernix](https://github.com/saschagrunert/kubernix)
+  - [nixos-ha-kubernetes](https://github.com/justinas/nixos-ha-kubernetes)
+
+しかし、私は学習目的のために Kubernetes クラスタを立てるため、kubeadm を使った一般的な構築手順にそって触れたいと考えています。NixOS の標準モジュールや関連ツールは便利ですが、kubeadm 前提の手順や構成と一致しない部分があり、学びたい手続きや設定がそのまま扱えない可能性があります。そこで、NixOS マシンに Ubuntu Server がインストールされた仮想マシンをいくつか立て、その上で Kubernetes クラスタを構築するという方針で進めていきます。
+
+### NixVirt
+
+NixOS で仮想マシンを立てるのに便利なのが [NixVirt](https://github.com/AshleyYakeley/NixVirt) です。NixVirt は Nix flake として提供されており、[libvirt](https://libvirt.org/) 上の仮想マシンや関連オブジェクトを宣言的に管理するための NixOS / Home Manager モジュールを含みます。
+
+https://github.com/AshleyYakeley/NixVirt
+
+NixOS は [`virtualisation.libvirtd`](https://github.com/NixOS/nixpkgs/blob/master/nixos/modules/virtualisation/libvirtd.nix) で libvirt デーモン自体の設定は提供しています。しかし、こちらの設定は VM やネットワークの定義を NixOS の構成として揃える仕組みは提供されていません。NixVirt は libvirt の接続 URI ごとに domains、networks、pools を列挙してその定義 XML を libvirt に流し込みます。また、NixVirt による変更の適用は冪等性があり、モジュール内部では定義と状態制御を行う `virtdeclare` というツールが使われています。
+
+https://nixos.wiki/wiki/Libvirt
+
+また、NixVirt からはテンプレートが提供されており、メモリサイズや仮想 CPU の割り当て、ディスクの設定などを書くだけで簡単に domain 層の XML を生成できます。ただし、テンプレートは安定した動作が保証されていないため、依存せずに細かく設定する必要がある場合もあります。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/lib/mkK8sWorker/default.nix#L80C1-L175C50
+
+### ネットワークの準備
+
+### マスターノードを作成する
+
+では、Kubernetes のマスターノードを立ち上げるモジュールを作成します。この構成は、NixOS ホスト上で libvirt を動かし、NixVirt を使って VM 定義を宣言的に管理します。ゲスト OS は Ubuntu Server として、cloud-init を使ってネットワーク、SSH ログイン用ユーザ、Kubernetes control plane の初期化までを初回の起動時に実行します。
+先にモジュールの定義とスクリプトを示します。全体としては、以下のような流れになります。
+
+1. ホスト側（NixOS）で VM の起動に必要なファイルを生成する
+1. NixVirt で libvirt domain を生成し、ISO とディスクをアタッチして起動する
+1. ゲスト側（Ubuntu）で cloud-init が動作して、payload ISO をマウントして `kubeadm init` を実行する
+
+https://github.com/momeemt/config/blob/develop/nix/lib/mkK8sMaster/default.nix
+
+https://github.com/momeemt/config/blob/develop/nix/lib/mkK8sMaster/main.sh
+
+#### cloud-init の設定ファイルを Nix で生成する
+
+[`pkgs.formats.yaml`]() を使って、cloud-init が読む YAML を Nix から生成します。
+
+### ワーカーノードを作成してクラスタに参加させる
+
+
 
 ## `k8s/`の構成
-
-## ノードを cloudinit から作成してクラスタに参加させる
 
 ## ✅ 2026年にやりたいこと
 

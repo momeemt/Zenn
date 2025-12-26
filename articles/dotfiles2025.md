@@ -167,6 +167,8 @@ Nix はそれぞれの機能をまとめて提供するソフトウェアで、�
 
 [^fixed-output-derivation]: 現実的にネットワークアクセスを完全に禁止してビルドを行うことはできません。そこで、[ネットワークを介して入手するリソースのハッシュ値を事前に与えることで再現性を担保することを許可する仕組み](https://nix.dev/manual/nix/2.32/store/derivation/outputs/content-address.html)が存在します
 
+https://github.com/nix-community/NUR
+
 プログラミング言語に付属するビルドシステムは特定の言語や環境を想定しています。たとえば Cargo は Rust で書かれたプログラムをビルドしますし、Nimble は Nim で書かれたプログラムをビルドします。しかし、Nix は汎用的なビルドシステムであり、「事前に与えられた入力から情報を読み取り、指定された出力への書き込みを行う」というルールさえ守ればどんなものでも対象として扱うことができます。
 ビルドシステムやパッケージマネージャと dotfiles には一見関係があるようには見えないので、抵抗感を持つ方も少なからずいらっしゃるかと思いますが、Home Manager は、事前に与えられた入力から情報を読み取り、ホーム構成を出力することに特化した、Nix のルールの上に成り立つソフトウェアであると考えられます。
 
@@ -218,7 +220,7 @@ https://masawada.hatenablog.jp/entry/2022/09/09/234159
 
 [^not-ip]: 完全に余談ですが、私は知的財産という考え方があまり好きではありません。すべての人間は自分が（偶然）得た環境によって能力を獲得して価値ある物を作っていくのであって、その結果の大半はその人の努力ではなく単なる運によって支えられていると考えています。発明であれ、研究であれ、ソフトウェアでも映像でも絵でもなんでもそうですが、個人の承認欲求や自社の利益のためにそれらの権利を独占するのではなく、社会全体の利益に使われるべきです。しかし社会の基本的な構造を変えるのは難しいので、自分ができる範囲で公開する（つまり、何らかの契約で縛られていない限り、自分が作ったソフトウェアやソースコードはすべて公開して自由に使えるようにする）ようにしています
 
-## 🚧 ディレクトリ構成
+## ✅ ディレクトリ構成
 
 momeemt/config[^config-naming] は、以下のようなディレクトリに分けています[^dir-ommision]。
 
@@ -238,14 +240,29 @@ momeemt/config[^config-naming] は、以下のようなディレクトリに分�
 └── terraform    # インフラのプロビジョニング定義ファイルを格納する
 ```
 
-## 🚧 `nix/`の構成
+このリポジトリは、いわゆる dotfiles に加えて、ホスト構成や自宅インフラをまとめて管理するためのモノレポです。この運用は、以下のような利点があります。
+
+- 整合性のある変更単位を作成できる
+  - ホスト構成とインフラは実運用上で相互依存しやすく、1つのコミットで同時に変更できます
+  - `flake.lock` により依存（nixpkgs など）も固定できるため、どの組み合わせによって正しく動作するのかをコミット単位で追跡できます
+- 開発環境を固定できる
+  - `flake.nix` を基に、Terraform / kubectl / sops などのツールチェーンを同じバージョンで揃えられます
+  - ディレクトリごとに別々の手順・別々のバージョン管理を持ち込まずに済みます
+- シークレットの参照点を一元化できる
+  - Nix / Terraform / Kubernetes のいずれからもシークレット（鍵・トークン・証明書など）を参照したくなりますが、モノレポにしておけば参照箇所と更新履歴を追いやすく、ローテーションもしやすくなります
+- 探索性が上がる
+  - ホスト名、ドメイン、ポート、証明書、クラスタ名などをリポジトリ内検索で辿れるため、設定の所在が分かりやすくなります
+- 段階的に Nix に寄せていきやすい
+  - 現時点で Nix 管理に乗っていない領域（たとえば `nas/`）も同じリポジトリ内に置いておけるため、移行の途中経過を含めて管理できます
+
+## ✅ `nix/`の構成
 
 `nix/`ディレクトリ内では、以下のようなディレクトリに分けています。
 
 ```sh
 .
 ├── flakes       # flake.nix の定義ファイルをモジュール化したファイル
-├── home         # 各ホストのユーザ空間の設定（home-manager）
+├── home         # 各ホストのユーザ空間の設定（Home Manager）
 ├── hosts        # 各ホストのシステム空間の設定（NixOS / nix-darwin）
 ├── lib          # momeemt/config で利用する共通化した関数など
 ├── modules      # momeemt/config で利用する NixOS module の定義
@@ -258,7 +275,7 @@ momeemt/config[^config-naming] は、以下のようなディレクトリに分�
 ### システム構成 (hosts)
 
 `nix/hosts/`には、各ホストのシステム構成について記述しています。
-先述した home-manager はホーム構成を適用するツールであり、この節で扱うツールはシステム構成を適用するツールです。システム構成とユーザ環境には以下のような違いがあります。
+先述した Home Manager はホーム構成を適用するツールであり、この節で扱うツールはシステム構成を適用するツールです。システム構成とユーザ環境には以下のような違いがあります。
 
 - 影響範囲
   - システム構成は、システムサービスやグローバルなパッケージ、`/etc`、起動設定など、OS 全体に影響します
@@ -293,12 +310,113 @@ https://github.com/numtide/system-manager
 ### ホーム構成 (home)
 
 `nix/home/`には、各ホストのホーム構成について記述しています。
-dotfiles で記述したいソフトウェアの設定などは基本的に home-manager から設定を行う場合が多いため、システム構成の設定量よりも多くなる傾向にあると思います。
-一方で、home-manager が OS ごとの差異を吸収してくれているため、システム構成よりは環境差を意識することが少ないように感じます。
+dotfiles で記述したいソフトウェアの設定などは基本的に Home Manager から設定を行う場合が多いため、システム構成の設定量よりも多くなる傾向にあると思います。
+一方で、Home Manager が OS ごとの差異を吸収してくれているため、システム構成よりは環境差を意識することが少ないように感じます。
 
 ### flake modules (flakes)
 
-## 🚧 シェルの設定（zsh）
+Nix Flake は基本的に `flake.nix` の `outputs` にすべてを書けますが、`packages` や `devShells` などの定義する属性が増えてくると、ファイルが肥大化しやすく、見通しも落ちます。[flake-parts](https://github.com/hercules-ci/flake-parts) を使うと、Flake の `outputs` を NixOS の module system に似た形でモジュールとして分割、合成することができます。flake-parts 自体は Flake のスキーマを最小限に記述することを目標にしており、標準的な flake 属性に対応する option とシステムを扱うための枠組みを提供します。
+
+https://github.com/hercules-ci/flake-parts
+
+同様に Flake の記述を楽にする道具として、[flake-utils](https://github.com/numtide/flake-utils) もあります。flake-utils はユーティリティ関数によってシステムごとの出力を生成することが目的です。たとえば `eachDefaultSystem` は、`defaultSystems`[^default-systems]に対してシステムごとの属性セットを構築します。筆者が flake-parts を選んでいる理由を以下に示します。
+
+[^default-systems]: `x86_64-linux`、`aarch64-linux`、`x86_64-darwin`、`aarch64-darwin` の4つのシステム
+
+- `outputs` をモジュールシステムとして分割できる
+- `system` の扱いが明示的になる
+- option とデバッグ機構を提供する
+- flake-parts に対応した flake が多くあり、記述が全体的に楽になる
+
+次のファイルでは、NixOS、並びに macOS のホスト設定を宣言しています。追加で読み込むモジュールやオーバレイなどが共通していることが多いため、`nixosSystem` や `darwinSystem` をラップする関数を定義して、それを呼び出しています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/hosts.nix
+
+ラップした関数はこちらで定義しています。flake の入力やシステム、後述する config 用のライブラリを渡して、プロファイルやモジュールから参照できるようにしています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/lib/hosts.nix
+
+また、`nix flake check` によって、コードの品質を担保するための `treefmt` や `pre-commit` などを実行しています。これらは [treefmt-nix](https://github.com/numtide/treefmt-nix) や [git-hooks.nix](https://github.com/cachix/git-hooks.nix) などの flake がそれらのプロジェクトルートにある `flake.nix` から `flakeModule` を提供していることによって、flake-parts からモジュールとして扱えるようになっています。
+
+https://github.com/numtide/treefmt-nix
+
+https://github.com/cachix/git-hooks.nix
+
+### ライブラリ（lib）
+
+Nix の設定が大きくなるにつれて、config 内で共通化できる部分が増えていきます。たとえばいくつかのシステム構成から nixpkgs のバージョンを参照する必要がありますが、それをライブラリから提供しています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/lib/default.nix
+
+### オーバーレイ（overlays）
+
+パッケージ集合などの属性を評価する時に差し替えたり追加する仕組みのことを[オーバレイ](https://wiki.nixos.org/wiki/Overlays)と言います。nixpkgs に対して、自分で作成した、あるいはサードパーティが提供するオーバレイを適用できます。ただしネストした属性は再帰的にマージされない点には注意が必要です。
+私は小さなスクリプトなど、`nix/packages/` 以下に定義したパッケージのオーバレイを用意したり、後述する brew-nix にパッチを当てるためのオーバレイを用意しています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/overlays/packages.nix
+
+また、現状ではほとんど手を付けられていませんが、自分の NUR からもパッケージを読み込んでいます。
+
+https://github.com/momeemt/nur-packages
+
+### プロファイル（profiles）
+
+複数のホストやホームから再利用したい設定を、`nix/profiles/` 以下にまとめています。`nix profile` サブコマンドや、`.nix-profile` とは関係がありません。各ホスト、ないしはホームの `imports` にパスを渡すと設定が適用できます。
+
+```sh
+├── hm                 # Home Module
+│   ├── accounts
+│   ├── editorconfig
+│   ├── files
+│   ├── homebrew
+│   ├── nix
+│   ├── programs
+│   ├── services
+│   ├── sops
+│   ├── wakatime
+│   └── wayland
+└── hosts              # NixOS / nix-darwin
+    ├── default.nix
+    ├── environment
+    ├── fonts
+    ├── networking
+    ├── security
+    ├── services
+    ├── system
+    └── time
+```
+
+ディレクトリ構成はまだ曖昧な部分もありますが、`hm` と `hosts` についてはオプション名に合わせてディレクトリを切っています。たとえば、Home Manager には Linux デスクトップを sway によって設定するオプションとして `wayland.windowManager.sway` がありますが、この設定は `hm/wayland/windowManager/sway/default.nix` に配置しています。こうすることで、設定ファイルを新しく作成する際にパスを迷う必要がなく、かつ `imports` にパスを書く際に間違えにくいというメリットもあります。
+また、`hosts` については `nixosSystem` と `darwinSystem` の設定が混在しています。これらが提供するオプションは共通したものもありますが、片方にしか存在しないものもあります。そこで、`imports` の内容を OS によって切り替えて、`default.nix` を読み込めば OS の差異を意識せずに設定を反映できるようにしています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hosts/environment/default.nix
+
+### モジュール（modules）
+
+[NixOS module を定義する](#✅-nixos-module-を定義する) で後述しますが、Home Manager などが提供するモジュールが対応していないソフトウェアや設定のオプションを自前で NixOS module を作成して対応しています。`/nix/modules/` 以下に定義ファイルがまとめられており、[ホーム構成](https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/lib/shared-modules.nix#L5)や[システム構成](https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/lib/hosts.nix#L27)からモジュールとして読み込んでいます。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/modules/home/default.nix
+
+### テンプレート（templates）
+
+Nix Flakes は、テンプレートから flake の雛形を生成できる `nix flake init` というコマンドを提供しています。これはテンプレートのファイル群をカレントディレクトリにコピーして初期化するもので、既存のファイルは上書きしません。
+
+https://nix.dev/manual/nix/2.18/command-ref/new-cli/nix3-flake-init
+
+
+テンプレートは、`outputs.templates` で設定しておくことでリポジトリ内の対象ディレクトリがコピーされます。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/templates.nix
+
+筆者の場合には、`nix flake init -t github:momeemt/config#rust` を実行すると、以下のファイルを含めたディレクトリがコピーされます。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/templates/rust/flake.nix
+
+テンプレートはまだ整備が行き届いていませんが、ユーザ入力によって変数を渡して内容を切り替える機構が含まれておらず、個人的にはインタラクティブに、あるいはオプションによって条件を切り替えてファイルを動的に生成したいと思っているので、今後もあまり真面目に整備しないかもしれません。そのような目的の場合には Nix Flake を作成するか、あるいは [devenv](https://devenv.sh/) を使うか、Nix 式を動的に生成するようなプログラムを実装するのが良いのかと思います。どれも試したことがないので、来年度は時間を見つけて整えていきたいと思っています。
+
+https://devenv.sh/
+
+## ✅ シェルの設定（zsh）
 
 シェルは macOS のデフォルトシェルである [zsh](https://zsh.sourceforge.io/) を利用しています。他の [bash](https://www.gnu.org/software/bash/) や [fish](https://fishshell.com/)、[nushell](https://www.nushell.sh/) などと比べて以下のような理由で、バランスが良く使いやすい点を気に入っています。
 
@@ -309,7 +427,7 @@ dotfiles で記述したいソフトウェアの設定などは基本的に home
 
 ### 基本的な設定
 
-zsh の基本的な設定は home-manager の `programs.zsh` から行っています。zsh についてはオプションが充実しているのと、私が zsh をきちんと勉強できていないため、ほとんど home-manager に閉じています。
+zsh の基本的な設定は Home Manager の `programs.zsh` から行っています。zsh についてはオプションが充実しているのと、私が zsh をきちんと勉強できていないため、ほとんど Home Manager に閉じています。
 
 ```nix :nix/profiles/hm/programs/shells/zsh/default.nix
 programs.zsh = {
@@ -332,7 +450,7 @@ programs.zsh = {
 }
 ```
 
-補完やシンタックスハイライトは有効にしています。このような定型的だがいくらかスクリプトを書かなければいけない機能やその有効化を簡単に行うことができるように抽象化レイヤを提供してくれている点は、home-manager の良いところの1つです。
+補完やシンタックスハイライトは有効にしています。このような定型的だがいくらかスクリプトを書かなければいけない機能やその有効化を簡単に行うことができるように抽象化レイヤを提供してくれている点は、Home Manager の良いところの1つです。
 
 #### キーマップ
 
@@ -342,19 +460,18 @@ programs.zsh = {
 
 [XDG Base Directory](https://specifications.freedesktop.org/basedir/latest/) とは、設定やキャッシュ、データなどの保存先を標準化することでファイルを整理するための仕様です。
 zsh はデフォルトでは各設定ファイルをホームディレクトリ配下に配置しますが、環境変数 `ZDOTDIR` を設定することで設定ファイルをそのディレクトリ配下に収めることができます。
-home-manager では `programs.zsh.dotDir` を適切に設定することで XDG Base Directory に準拠できます。`config.xdg.configHome`  `$XDG_CONFIG_HOME` の値を持つ Nix 式です。
+Home Manager では `programs.zsh.dotDir` を適切に設定することで XDG Base Directory に準拠できます。`config.xdg.configHome`  `$XDG_CONFIG_HOME` の値を持つ Nix 式です。
 
 #### ディレクトリ候補の探索パスの追加
 
-`programs.zsh.cdpath` にパスを追加しておくと、
-このオプションは `AUTO_CD` の設定に変換されます。
+`programs.zsh.cdpath` にパスを追加しておくと、`cd` の補完候補として探索されるディレクトリが増えます。
 私はリモートから入手した Git リポジトリを管理するツールとして [ghq](https://github.com/x-motemen/ghq) を使っています[^ghq-naming]。このツールは環境変数 `GHQ_ROOT` を設定することで[リポジトリを配置するパスを変更でき](https://github.com/x-motemen/ghq#environment-variables)、私は `$XDG_DATA_HOME/ghq` を指定しています。そのせいで新しく配置したリポジトリに移動するのが非常に面倒であり、楽にタイプするために `cdpath` に GitHub リポジトリ配下と、その中でも私のユーザ名のディレクトリ配下をしています。
 そうすることで、以下のように補完が効くようになり、インタラクティブシェル内での体験を改善できます。
 
 [^ghq-naming]: 断りなく会話に出すと知らない人からはギョッとされることが多いが、連合国軍最高司令官総司令部のことではない
 
 一方で、類似した体験を提供するコマンドとして最近は [zoxide](https://github.com/ajeetdsouza/zoxide) が話題になりました。これは過去に移動したディレクトリを記憶しておき、絶対パスや相対パスだけではなくディレクトリ名のみで移動できるようにするコマンドです。
-私は `z` コマンドを `cd` にエイリアスした上で、次のように使い分けています。
+私は `cd` コマンドを `z` にエイリアスした上で、次のように使い分けています。
 
 - 過去に移動したディレクトリは zoxide でジャンプする
 - 過去に移動していないディレクトリが多く含まれているディレクトリは `cdpath` に追加する
@@ -363,9 +480,9 @@ GitHub のタイムラインで見かけた知らないソフトウェアの Git
 
 #### 名前付きディレクトリを定義する
 
-`programs.zsh.dirHashes` から zsh で名前付きディレクトリを設定できます。
+`programs.zsh.dirHashes` から zsh で名前付きディレクトリを設定できます。`dirHashes` を設定しておくと、`~github` や `~momeemt` のように名前付きディレクトリとして参照できるようになります。
 
-[^vimcmd]: これを説明したい
+[^vimcmd]: zsh の vi キーバインドは `viins`（挿入モード）と `vicmd`（コマンドモード）の2つのキーマップを行き来します。Home Manager の `defaultKeymap` は、`emacs` か、先ほどの2つのモードのいずれかです。
 [^macos-cocoa]: macOS 向けアプリケーションフレームワークの [Cocoa](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CocoaFundamentals/WhatIsCocoa/WhatIsCocoa.html) が Emacs のキーバインドをデフォルトで採用していたため
 
 ### 設定ファイルに直接追記する
@@ -445,11 +562,15 @@ programs.zsh = {
 ここで `fpath` に config 内のシェル関数、および補完を定義したシェルスクリプトを格納したディレクトリを渡しています。このように Nix 式としてパスを渡すと `/nix/store/` 配下にコピーされ、1つの derivation として扱われます。
 
 これまで定義したシェル関数は `mkcd` と `nr` です。前者はその名の通り、ディレクトリを作成した上で移動を行うスクリプトですが、後者は `nix run` を実行するスクリプトです。
-`flake.nix` の `outputs` には、`packages.<package>` という derivation を取るフィールドが存在しており、これは `nix run ".#<package>"` を実行することでパッケージをビルドできます。nixpkgs には
+`flake.nix` の `outputs` には、`packages.<package>` という derivation を取るフィールドが存在しており、`nix run ".#<package>"` を実行することでパッケージをビルドできます。デフォルトでは補完が提供されていませんが、`nix flake show --json` によって `flake.nix` の情報を JSON によって取得できます。以下のようなコマンドを補完スクリプトとして読み込むことで、`flake.nix` を参照していちいちどのようなパッケージが定義されているか確認しなくても良くなります。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/shells/zsh/completions/_nr
 
 ### nixpkgs 由来の zsh を利用する
 
 macOS はデフォルトシェルとして zsh を採用しているため、初期状態から `/bin/zsh` に zsh を配置していますが、バージョンが同じでも OS のアップデートによりビルドオプションや依存ライブラリ、パッチなどが変更される可能性があるため、macOS 標準の zsh ではなく nixpkgs からインストールした zsh を利用したいです。
+macOS ではログインシェルがユーザアカウントの属性として管理されており、単に `PATH` の先頭に nixpkgs の zsh を置くだけではデフォルトシェルを変更することはできません。nix-darwin では `users.users.<name>.shell` にパッケージを指定することで、ユーザのログインシェルを宣言的に設定できます。
+また、macOS はログインシェルとして許可する実行ファイルの一覧を `/etc/shells` に持っているため、nixpkgs 由来の zsh をログインシェルにする場合は `environment.shells` に `pkgs.zsh` を追加しておく必要もあります。
 
 ### zsh についての資料
 
@@ -467,23 +588,52 @@ https://zsh.sourceforge.io/Doc/Release/zsh_toc.html
 
 エディタには Neovim と VSCode を利用しています。主に Markdown や Typst など、プレビューを見ながら文章を書きたい場合には VSCode を利用していて、それ以外は Neovim を利用しています。
 
-## 🚧 ターミナルマルチプレクサの設定（tmux）
+## ✅ ターミナルマルチプレクサの設定（tmux）
 
 ターミナルマルチプレクサは1つのターミナルエミュレータの中で、複数のターミナルを作成して切り替えたり、画面を分割して並べて表示したりするためのソフトウェアです。作業状態をセッションとして保存できるので、SSH接続が切れてもセッション内で動作しているプロセスを停止することなく、後から同じ状態に復帰することができます。私は [tmux](https://github.com/tmux/tmux/wiki) というターミナルマルチプレクサを使っています。
 
 https://github.com/tmux/tmux/wiki
 
-最も素朴なターミナルマルチプレクサとして [GNU Screen]() がある他、最近では [Zellij](https://github.com/zellij-org/zellij) も注目されています。Zellij は現代的なターミナルワークスペースで、自由なレイアウトを組むことができ、プラグインシステムとして [WebAssembly]() を採用しています。3年前に初めて SSH 接続を切らさないために Screen を使って便利さを実感してから、tmux を使い始めました。Zellij も気になっていますが、現状では tmux の操作に不満を感じていないことと、個人的な経験として WebAssembly のプラグインシステムが満足に動作するのか疑問を持っていることもあり移行していません。来年はいくつかプラグインを試したり作ってみたりして、tmux よりも良いと確信を持てたら移行してみたいなとも思っています。
+最も素朴なターミナルマルチプレクサとして [GNU Screen](https://www.gnu.org/software/screen/) がある他、最近では [Zellij](https://github.com/zellij-org/zellij) も注目されています。Zellij は現代的なターミナルワークスペースで、自由なレイアウトを組むことができ、プラグインシステムとして [WebAssembly](https://webassembly.org/) を採用しています。3年前に初めて SSH 接続を切らさないために Screen を使って便利さを実感してから、tmux を使い始めました。Zellij も気になっていますが、現状では tmux の操作に不満を感じていないことと、WebAssembly のプラグインシステムが満足に動作するのか疑問を持っていることもあり移行していません。来年はいくつかプラグインを試したり作ってみたりして、tmux よりも良いと確信を持てたら移行してみたいなとも思っています。
 
 Home Manager が提供する tmux の設定は非常にシンプルで、他のツールと同様に [`programs.tmux.*`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.tmux.enable) を設定しますが、主な設定は [`programs.tmux.extraConfig`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.tmux.extraConfig) に tmux の設定ファイルである `tmux.conf` に記述する内容を書くことになります。
 
 ### 基本的な設定
 
+`programs.tmux` では履歴やシェル、プラグインなど tmux の基本的な設定を行っています。
+tmux のプラグイン管理としては [tpm](https://github.com/tmux-plugins/tpm) が有名ですが、プラグイン管理も Nix 側に寄せています。nixpkgs 25.11 は2025年12月時点で[59個のプラグインが公開しています](https://search.nixos.org/packages?channel=25.11&buckets=%7B%22package_attr_set%22%3A%5B%22tmuxPlugins%22%5D%2C%22package_license_set%22%3A%5B%5D%2C%22package_maintainers_set%22%3A%5B%5D%2C%22package_teams_set%22%3A%5B%5D%2C%22package_platforms%22%3A%5B%5D%7D&query=tmuxPlugins) ので、基本的には nixpkgs からパッケージを選んで [`programs.tmux.plugins`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.tmux.plugins) に渡せば良いです[^self-tmux-plugins-load-reason]。
+
+[^self-tmux-plugins-load-reason]: 筆者がなぜ自前でプラグインをロードしているのかは[2023年11月の筆者](https://github.com/momeemt/config/commit/efee7efbdef0f76e1bc69c68c6566813f0213119)に聞いてください。2025年12月の筆者には分かりかねます。申し訳ない
+
 https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/tmux/default.nix
 
 ### `extraConfig` の内容
 
+`programs.tmux.extraConfig` は、Home Manager が生成する tmux 設定に対して文字列を追記するためのオプションです。
+Home Manager の `programs.tmux.*` は、履歴サイズやインデックス、デフォルトシェルなどの基本設定を Nix のオプションとして提供します。一方で、キーバインドや copy-mode、ステータスラインのような項目は `tmux.conf` として書かなければいけません。そこで、`extraConfig` に `tmux.conf` の内容を追記して適用しています。
+
 https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/tmux/tmux.conf
+
+いくつかよく使っている設定項目について紹介します。
+
+- `set-option -g prefix C-a`
+  - tmux のプレフィックスキーを `C-b` から `C-a` に変更しています
+  - Ctrl キーから近いキーを選んで入力しやすくしていますが、シェルの Emacs キーバインドと競合するの今後考え直そうかなと思っています
+- `bind-key | split-window -h`
+  - ペインの左右分割をより直感的なキーに割り当てています
+  - 同様に理由で、上下分割を `-` に割り当てています
+- `set-window-option -g mode-keys vi`
+  - copy-mode の操作を vi に寄せています
+- `set-option -g status-right '...'`
+  - ステータスラインに表示する情報を設定しています
+
+### tmux-nix の実装
+
+`extraConfig` を見れば分かる通り、Home Manager が提供する `programs.tmux` のオプションだけで tmux の設定を満足に行うのは難しく、結局 `extraConfig` が中心になってしまいます。そこで、[tmux-nix](https://github.com/momeemt/tmux-nix) というモジュールを開発しています。[Nix meetup #3](https://nix-ja.connpass.com/event/353532/) というイベントで発表した資料で説明していますので、興味がある方はそちらを参照してください。なお、この [Nix meetup](https://nix-ja.connpass.com/) というイベントは 2024年10月 から定期的に開催されており、毎回さまざまな発表が行われ、日本語話者の Nix ユーザの交流の場にもなっています。
+
+https://speakerdeck.com/momeemt/tmux-nixnoshi-zhuang-wotong-sitexue-bunixosmoziyuru
+
+https://github.com/momeemt/tmux-nix
 
 ## ✅ ターミナルエミュレータの設定（Alacritty）
 
@@ -514,8 +664,8 @@ Nix で dotfiles を管理することが他のツールと比べて優位であ
 [terminal.shell]
 program = "zsh"
 args = [
-  "-l"
-  "-c"
+  "-l",
+  "-c",
   "tmux attach -t main || tmux new -s main"
 ]
 ```

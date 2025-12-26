@@ -3,11 +3,13 @@ title: "2025年のdotfiles"
 emoji: "🌳"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["dotfiles", "Nix", "Kubernetes", "Terraform"]
-published: false
+published: true
 ---
 
+# はじめに
+
 こんにちは。ソフトウェアエンジニアの生産効率は、高性能なマシンや質の良いキーボード、さらには日々の運動や栄養バランスの取れた食事などに支えられていますが、中でもポータブルな設定ファイル集である **dotfiles** にはそれぞれのエンジニアが持つ計算機環境へのこだわりが凝縮されているのではないでしょうか。
-この記事では、まず dotfiles とそれを取り巻くシステムの変遷について説明して、その後に今年2025年に筆者が整備した dotfiles について紹介します。
+この記事では、まず dotfiles とそれを取り巻くシステムの変遷について説明して、その後に今年2025年に筆者が整備した config（dotfiles、Terraform、Kubernetes 設定のモノレポ）について紹介します。
 
 https://github.com/momeemt/config
 
@@ -132,11 +134,11 @@ https://github.com/nix-community/home-manager
 Home Manager を始めとした Nix のエコシステムを利用して dotfiles を管理すれば、以下の要求をすべて満たすことができます。
 
 - ビルドマニフェストを記述するドメイン固有言語である Nix を使って、環境差を吸収する記述を行えます
-- 適用が Atomic で、ロールバックや冪等性の保証、ファイル退避の処理が考慮されています
+- 適用が Atomic で、ロールバックや冪等性、ファイル退避の処理が考慮されています
 - [sops-nix](https://github.com/Mic92/sops-nix) など、シークレット管理をするためのモジュールが提供されています
 - ビルドシステムおよびパッケージマネージャとして働く Nix と協業して、ソフトウェアそのものを密結合に管理できます
   - Nix を用いてパッケージを `/nix/store` 配下にインストールできます
-  - Neovim の設定だけでなく、Neovim が環境で利用可能であるかについても保証できます
+  - Neovim の設定だけでなく、Neovim が環境で利用可能であるかについても概ね保証できます
 
 インストール方法については、以下のマニュアルを参照してください。
 
@@ -488,7 +490,7 @@ GitHub のタイムラインで見かけた知らないソフトウェアの Git
 ### 設定ファイルに直接追記する
 
 基本的にはオプションに割り当てた Nix の値をもとに設定ファイルを生成することが基本ですが、シェルスクリプトや設定のために利用するその他のプログラミング言語[^prog-lang-for-config]は OS やソフトウェアの状態を基にした複雑な条件分岐を表現できますから、あらゆる状態を静的なオプションに落とすのは原理的に難しいです。
-そこで、多くのソフトウェアに対するオプションには設定ファイルを文字列で追記する形で自由に記述できるオプションが提供されています。zsh の場合は、`profileExtra` が `.zprofile` に対する追記に、`initContent`　が `.zshrc` に対する追記に対応します。
+そこで、多くのソフトウェアに対するオプションには設定ファイルを文字列で追記する形で自由に記述できるオプションが提供されています。zsh の場合は、`profileExtra` が `.zprofile` に対する追記に、`initContent` が `.zshrc` に対する追記に対応します。
 
 [^prog-lang-for-config]: Lua、Lisp、Pythonなど
 
@@ -848,7 +850,7 @@ WM は macOS と Linux デスクトップで扱いが異なります。まず、
 
 ### nix-darwin vs Home Manager
 
-Aerospace の設定は [nix-darwin](https://nix-darwin.github.io/nix-darwin/manual/#opt-services.aerospace.enable) と [Home Manager](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.aerospace.enable) の両方にあります。
+AeroSpace の設定は [nix-darwin](https://nix-darwin.github.io/nix-darwin/manual/#opt-services.aerospace.enable) と [Home Manager](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.aerospace.enable) の両方にあります。
 システム構成として与えるか、ホーム構成として与えるかのメリット・デメリットは既に整理した通りですが、以下の理由でシステム構成として与えています。
 
 1. 実家のパソコンも Nix で管理する予定があるが、AeroSpace の存在によって情報を専門としていない一般的なユーザの操作を阻害することは基本的にないと考えられる
@@ -891,7 +893,7 @@ https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/
 ```
 
 に変換します[^first-prior-listToAttrs]。このように柔軟に属性セットを構成できるのは便利です。
-Aerospace の設定ではキーバインドをキー名に取り、操作を値に取るので、ワークスペース番号と数字キーの値が一致している時にはこのように記述することで簡潔に設定を表現できてミスも減らせます。
+AeroSpace の設定ではキーバインドをキー名に取り、操作を値に取るので、ワークスペース番号と数字キーの値が一致している時にはこのように記述することで簡潔に設定を表現できてミスも減らせます。
 また、Nix は for 文で手続き的に属性セットを構成するのではなく、このようにデータの構造を上手く変換する関数型言語的なアプローチで構成する[^like-ocaml]ところも面白い点の1つです。面白いだけではなく、羅列になりがちな設定の性質を扱いやすい点でも手続き的な言語で記述するよりも向いているとも思います。
 
 [^first-prior-listToAttrs]: なお、同じ`name`が複数回出た場合には[最初のものが優先されます](https://nix.dev/manual/nix/2.30/language/builtins#builtins-listToAttrs)
@@ -1023,7 +1025,7 @@ spotify = prev.brewCasks.spotify.overrideAttrs (oldAttrs: {
 
 ### 素の Homebrew を使う
 
-brew-nix を使ったインストールは1つ目の問題点であった、*GUI アプリケーションのインストール*を解決しますが、2つ目の問題点であった *別のアプリケーションをインストールするようなハブとなるアプリケーションのインストール* の解決策としては微妙です。というのも、brew-nix が生成するのはあくまで derivation なので、アプリケーションの内容（すなわちビット列）が少しでも変わるたびに異なる derivation として扱われます。アプリケーションは往々にしてファイルサイズが大きいためディスクを圧迫しますし[^brew-nix-size]、認証機能や別のアプリケーションをインストールするような機能を持っている場合、derivation が変わるたびにそれらの操作がリセットされてしまうのです。たとえば、私はスクリーンショットを撮影するために [CleanShot X](https://cleanshot.com/) を使っていますが、これは [Setapp](https://setapp.com/?srsltid=AfmBOooyxTXDaE8ZmK6Ts1_wn0t4k7nL-BLGP1a82VJ874PiTYR8wuhz) というサブスクリプション型のアプリケーションコレクションからインストールしています。`brew-api` を更新するたびに Setapp を介してインストールしたアプリケーションが見えなくなり、スクリーンショットが使えなくなるのは非常に不便です。また、個人で扱いたいアプリケーションでも nix-darwin を使うとグローバルにインストールされてしまうという問題もあります。そこでシステム構成ではなくホーム構成で、かつ素の Homebrew を使う方法について考えます。
+brew-nix を使ったインストールは1つ目の問題点であった、*GUI アプリケーションのインストール*を解決しますが、2つ目の問題点であった *別のアプリケーションをインストールするようなハブとなるアプリケーションのインストール* の解決策としては微妙です。というのも、brew-nix が生成するのはあくまで derivation なので、アプリケーションの内容（すなわちビット列）が少しでも変わるたびに異なる derivation として扱われます。アプリケーションは往々にしてファイルサイズが大きいためディスクを圧迫しますし[^brew-nix-size]、認証機能や別のアプリケーションをインストールするような機能を持っている場合、derivation が変わるたびにそれらの操作がリセットされてしまうのです。たとえば、私はスクリーンショットを撮影するために [CleanShot X](https://cleanshot.com/) を使っていますが、これは [Setapp](https://setapp.com) というサブスクリプション型のアプリケーションコレクションからインストールしています。`brew-api` を更新するたびに Setapp を介してインストールしたアプリケーションが見えなくなり、スクリーンショットが使えなくなるのは非常に不便です。また、個人で扱いたいアプリケーションでも nix-darwin を使うとグローバルにインストールされてしまうという問題もあります。そこでシステム構成ではなくホーム構成で、かつ素の Homebrew を使う方法について考えます。
 
 [^brew-nix-size]: この問題は brew-nix のドキュメントでも触れられています。普段の作業に影響を与えるほどディスクサイズを圧迫するアプリケーションについてもやはり、brew-nix を使わない方が得策です
 
@@ -1071,7 +1073,7 @@ https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/
 - `"cloudflared/emu.json"` / `"cloudflared/emu-desktop.json"`
 - `"k8s/ca.key"`
 
-一方で、ユーザ権限のプログラムが読むシークレットは管理者ユーザにが所有するファイルになると困ることもあります。たとえば、`wakatime_api_key` をシステム側で復号してしまうと、ユーザが読めるようにするには権限を緩める必要が出てきます。そこで、ホーム構成側でも別にシークレットを管理しています。
+一方で、ユーザ権限のプログラムが読むシークレットは管理者ユーザが所有するファイルになると困ることもあります。たとえば、`wakatime_api_key` をシステム側で復号してしまうと、ユーザが読めるようにするには権限を緩める必要が出てきます。そこで、ホーム構成側でも別にシークレットを管理しています。
 
 https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/sops/default.nix
 
@@ -1116,7 +1118,7 @@ Cloudflare Tunnel は HTTP だけでなく、SSH やリモートデスクトッ�
 
 https://wiki.nixos.org/wiki/Cloudflared
 
-トンネルを UUID ごとに定義しています。ま他、`ingress` オプションによってどのホスト名へのアクセスをローカルのどのサービスへ転送するかを定義します。認証情報が含まれたファイルについては、先述のシークレット管理によって暗号化したファイルを VCS に載せておき、復号化済みのパスを渡しています。
+トンネルを UUID ごとに定義しています。また、`ingress` オプションによってどのホスト名へのアクセスをローカルのどのサービスへ転送するかを定義します。認証情報が含まれたファイルについては、先述のシークレット管理によって暗号化したファイルを VCS に載せておき、復号化済みのパスを渡しています。
 
 ```nix :nix/hosts/emu/configuration.nix
 services.cloudflared = {
@@ -1248,7 +1250,7 @@ https://github.com/mathiasbynens/dotfiles
 cd; curl -#L https://github.com/mathiasbynens/dotfiles/tarball/main | tar -xzv --strip-components 1 --exclude={README.md,bootstrap.sh,.osx,LICENSE-MIT.txt}
 ```
 
-しかし、Nix でシステム構成やホーム構成を管理する場合には、ユーザ名やシークレットなど、その dotfiles を整備したユーザ固有の情報が含まれることがあるため、そのまま他のユーザが使い回しづらいことが多いです[^dotfiles-by-others]。また、システム構成はホスト全体に影響するため、ホーム構成よりも試すコストやリスクが大きいです。そこで、そのようなユーザ固有の情報を抜いてホーム構成のみを適用したコンテナイメージを固め、配布することで、部分的にではありますが、自分の環境を汚すことなく誰でも簡単に試せるようにしています。
+しかし、Nix でシステム構成やホーム構成を管理する場合には、ユーザ名やシークレットなど、その dotfiles を整備したユーザ固有の情報が含まれることがあるため、そのまま、他のユーザが使い回しづらいことが多いです[^dotfiles-by-others]。また、システム構成はホスト全体に影響するため、ホーム構成よりも試すコストやリスクが大きいです。そこで、そのようなユーザ固有の情報を抜いてホーム構成のみを適用したコンテナイメージを固め、配布することで、部分的にではありますが、自分の環境を汚すことなく誰でも簡単に試せるようにしています。
 
 [^dotfiles-by-others]: そもそも他のユーザの dotfiles をそのまま使いたくなることはあるのでしょうか。私はそう思ったことは正直一度もありませんが、試したくなることもあるのかもしれません
 

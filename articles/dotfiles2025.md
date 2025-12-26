@@ -7,9 +7,7 @@ published: false
 ---
 
 こんにちは。ソフトウェアエンジニアの生産効率は、高性能なマシンや質の良いキーボード、さらには日々の運動や栄養バランスの取れた食事などに支えられていますが、中でもポータブルな設定ファイル集である **dotfiles** にはそれぞれのエンジニアが持つ計算機環境へのこだわりが凝縮されているのではないでしょうか。
-この記事では、まず dotfiles とそれを取り巻くシステムの変遷について説明して[^already-known-dotfiles]、その後に今年2025年に筆者が整備した dotfiles について紹介します。
-
-[^already-known-dotfiles]: すでに dotfiles を管理・運用されていて、私の dotfiles の内容にのみ興味がある方はスキップして [momeemt/config](#momeemt%2Fconfig) から読んでください。
+この記事では、まず dotfiles とそれを取り巻くシステムの変遷について説明して、その後に今年2025年に筆者が整備した dotfiles について紹介します。
 
 https://github.com/momeemt/config
 
@@ -18,6 +16,10 @@ https://github.com/momeemt/config
 :::
 
 # dotfiles
+
+:::message
+すでに dotfiles を管理・運用されていて、私の dotfiles の内容にのみ興味がある方はスキップして [momeemt/config](#momeemt%2Fconfig) から読んでください。
+:::
 
 ドットファイルとは、ファイル名が`.`で始まるファイルのことを指します。
 多くのシステムでは隠しファイルに設定されていることが多く、ソフトウェアやOS等の設定ファイルは一般的なユーザから目につかないようにドットファイルとして作成されます。
@@ -32,7 +34,7 @@ https://github.com/momeemt/config
 エンジニアが扱う計算機環境が複数ある場合、会社用のマシンと自宅用のマシンで設定を共通させたい、SSH先で作業する際にも普段と同じ体系で操作を行いたいという欲求は自然と生まれますが、ソフトウェアのインストールや設定の反映を場当たり的に行っている場合、手順や環境の状態が明文化されないため、新しい環境に移行する際の環境構築や設定の反映には長い時間が掛かります。
 そこで、複数あるドットファイルを1つのリポジトリに集約すれば、新しい環境に移った際にも以前の環境を再現する作業を定型化することができそうです。このリポジトリを **dotfiles** と呼びます。
 
-## ✅ 素朴な dotfiles
+## 素朴な dotfiles
 
 まずは最もシンプルな dotfiles について考えます。最低限必要なのは以下の2つです。
 
@@ -68,7 +70,7 @@ ln -s "$repo_dir/vim/.vimrc" "$HOME/.vimrc"
 
 こうしたファイル配置と環境の差分吸収の問題は、chezmoi や GNU Stow などのツールを導入することで解決できます。
 
-## ✅ dotfiles 管理ツールを利用する
+## dotfiles 管理ツールを利用する
 
 複雑な dotfiles を扱う場合、chezmoi や GNU Stow が提供する機能を利用することで処理を共通化して簡潔に記述することができます。それぞれについて見てみましょう。
 
@@ -121,7 +123,7 @@ Stow は内部状態を保持せず、今あるディレクトリ構造からシ
 
 このような要求に対しては、設定ファイルの管理ツールとパッケージマネージャが同一か、あるいは協調して動作できるソフトウェアが必要です。
 
-## ✅ Home Manager を利用する
+## Home Manager を利用する
 
 dotfiles 管理ツールは設定ファイルを所定の場所に置くことを中心に責任を持っていますが、ソフトウェアそのもの（バイナリ、プラグイン、依存関係のバージョン）をインストールすることは難しいです。これも含めて管理したい場合には [Home Manager](https://github.com/nix-community/home-manager) が便利です。Home Manager は、ビルドシステムの Nix を用いたホーム構成の適用ツールです。
 
@@ -195,7 +197,7 @@ https://zenn.dev/asa1984/articles/nixos-is-the-best
 
 ここからは2025年までに筆者が整備した dotfiles について紹介していきます。
 
-## ✅ 目標と選定基準
+## 目標と選定基準
 
 dotfiles を構成する上での目標と選定基準について予め明らかにしておきます。
 
@@ -220,7 +222,7 @@ https://masawada.hatenablog.jp/entry/2022/09/09/234159
 
 [^not-ip]: 完全に余談ですが、私は知的財産という考え方があまり好きではありません。すべての人間は自分が（偶然）得た環境によって能力を獲得して価値ある物を作っていくのであって、その結果の大半はその人の努力ではなく単なる運によって支えられていると考えています。発明であれ、研究であれ、ソフトウェアでも映像でも絵でもなんでもそうですが、個人の承認欲求や自社の利益のためにそれらの権利を独占するのではなく、社会全体の利益に使われるべきです。しかし社会の基本的な構造を変えるのは難しいので、自分ができる範囲で公開する（つまり、何らかの契約で縛られていない限り、自分が作ったソフトウェアやソースコードはすべて公開して自由に使えるようにする）ようにしています
 
-## ✅ ディレクトリ構成
+## ディレクトリ構成
 
 momeemt/config[^config-naming] は、以下のようなディレクトリに分けています[^dir-ommision]。
 
@@ -255,7 +257,7 @@ momeemt/config[^config-naming] は、以下のようなディレクトリに分�
 - 段階的に Nix に寄せていきやすい
   - 現時点で Nix 管理に乗っていない領域（たとえば `nas/`）も同じリポジトリ内に置いておけるため、移行の途中経過を含めて管理できます
 
-## ✅ `nix/`の構成
+## `nix/`の構成
 
 `nix/`ディレクトリ内では、以下のようなディレクトリに分けています。
 
@@ -393,7 +395,7 @@ https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/
 
 ### モジュール（modules）
 
-[NixOS module を定義する](#✅-nixos-module-を定義する) で後述しますが、Home Manager などが提供するモジュールが対応していないソフトウェアや設定のオプションを自前で NixOS module を作成して対応しています。`/nix/modules/` 以下に定義ファイルがまとめられており、[ホーム構成](https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/lib/shared-modules.nix#L5)や[システム構成](https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/lib/hosts.nix#L27)からモジュールとして読み込んでいます。
+[NixOS module を定義する](#nixos-module-を定義する) で後述しますが、Home Manager などが提供するモジュールが対応していないソフトウェアや設定のオプションを自前で NixOS module を作成して対応しています。`/nix/modules/` 以下に定義ファイルがまとめられており、[ホーム構成](https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/lib/shared-modules.nix#L5)や[システム構成](https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/flakes/lib/hosts.nix#L27)からモジュールとして読み込んでいます。
 
 https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/modules/home/default.nix
 
@@ -416,7 +418,7 @@ https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/
 
 https://devenv.sh/
 
-## ✅ シェルの設定（zsh）
+## シェルの設定（zsh）
 
 シェルは macOS のデフォルトシェルである [zsh](https://zsh.sourceforge.io/) を利用しています。他の [bash](https://www.gnu.org/software/bash/) や [fish](https://fishshell.com/)、[nushell](https://www.nushell.sh/) などと比べて以下のような理由で、バランスが良く使いやすい点を気に入っています。
 
@@ -534,7 +536,7 @@ programs.zsh = {
 
 zsh の履歴は `programs.zsh.history` から設定できます。
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/shells/zsh/history/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/shells/zsh/history/default.nix
 
 履歴ファイルは `$XDG_STATE_HOME/zsh/history` 配下に格納するように設定しています。また、履歴ファイルのサイズは上限が決まっているので重複を可能な限り排除すると補完の体験が良くなります。
 特に、認証情報を含むコマンドや `ls` 、`cd` などの履歴補完の価値があまり大きくないコマンドについては、`ignorePatterns` から履歴ファイルに書き込まれないように設定しています。
@@ -584,11 +586,145 @@ https://gihyo.jp/dp/ebook/2022/978-4-297-12730-5
 
 https://zsh.sourceforge.io/Doc/Release/zsh_toc.html
 
-## エディタの設定 (Neovim, nixvim, VSCode)
+## エディタの設定 (Nixvim, VSCode)
 
-エディタには Neovim と VSCode を利用しています。主に Markdown や Typst など、プレビューを見ながら文章を書きたい場合には VSCode を利用していて、それ以外は Neovim を利用しています。
+エディタには Neovim と VSCode を利用しています。主に Markdown や Typst など、プレビューを見ながら文章を書きたい場合には VSCode を利用していて、それ以外は Neovim を利用しています。Home Manager では、[`programs.neovim`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.neovim.enable) と [`programs.vscode`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.vscode.enable) オプションによって設定を適用できます。
 
-## ✅ ターミナルマルチプレクサの設定（tmux）
+### Nixvim とは
+
+Home Manager を使い始めた頃は `programs.neovim` を使って Neovim を設定していましたが、現在は Nixvim を使っています。
+
+https://github.com/nix-community/nixvim
+
+Nixvim は Nix のモジュールとして Neovim の設定を記述するための仕組みで、flake として配布されています。設定は Nix で行いながら、必要に応じてプラグインを追加したり Lua で直接スクリプトを書き足すことができます。Home Manager の場合はプラグインは nixpkgs から取得しますが設定は Vim script ないしは Lua で書く必要があります。一方、Nixvim の場合にはプラグインの設定まで宣言的に行うことができます。たとえば、カラースキーマとステータスラインを追加するような設定を以下の Nix 式によって記述できます。
+
+```nix
+{
+  programs.nixvim = {
+    enable = true;
+    colorschemes.catppuccin.enable = true;
+    plugins.lualine.enable = true;
+  };
+}
+```
+
+これにより [lualine](https://github.com/nvim-lualine/lualine.nvim) は[それなりに妥当なデフォルト設定](https://github.com/nix-community/nixvim/blob/66a5dc70e2d8433034bccdbb9c3c7bcecd86f9a6/plugins/by-name/lualine/default.nix)で初期化され、カラースキーマとの連携も含めて追加の Lua 設定なしに動作させることができます。
+Nixvim は Home Manager のモジュールをはじめ、nix-darwin、NixOS のモジュールが提供されており、スタンドアロンにビルドして利用することもできます。筆者は Home Manager のモジュールとして利用しています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/default.nix
+
+Nixvim はデフォルトでは nixpkgs の Neovim をパッケージとして利用していますが、筆者は copilot-language-server を使用するために [neovim-nightly-overlay](https://github.com/nix-community/neovim-nightly-overlay) が提供している開発版の Neovim 0.12 を使っています。
+
+https://github.com/nix-community/neovim-nightly-overlay
+
+これは Neovim 0.12 に [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) の [`textDocument/inlineCompletion`](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.18/specification/#textDocument_inlineCompletion) が入ったことによるもので、以下の記事を参考に設定しました。
+
+https://zenn.dev/vim_jp/articles/a6839f7204a611
+
+### Nixvim に入れているプラグイン
+
+Neovim については学習中で、設定しているキーマップも[矢印を無効にした](https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/keymaps/disable-arrow/default.nix)り、[`jj`をESCに割り当てた](https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/keymaps/exit/default.nix)りしている程度です。この節では、Nixvim に入れているプラグインについて、Nix で設定することで大きな恩恵があったものを中心にいくつか紹介します。入れているプラグインは以下の通りです。
+
+- [nvim-cmp](https://github.com/hrsh7th/nvim-cmp)（補完）
+- [hop.nvim](https://github.com/smoka7/hop.nvim/)（Easymotion系）
+- [indent-blankline.nvim](https://github.com/lukas-reineke/indent-blankline.nvim)（インデントラインの表示）
+- [lualine.nvim](https://github.com/nvim-lualine/lualine.nvim)（ステータスラインの表示）
+- [nvim-autopairs](https://github.com/windwp/nvim-autopairs)（括弧やクォーテーションを自動で閉じる）
+- [nvim-surround](https://github.com/kylechui/nvim-surround)（囲み文字の置換）
+- [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)（fuzzy finder）
+- [telescope-file-browser.nvim](https://github.com/nvim-telescope/telescope-file-browser.nvim)（Telescopeのファイルブラウザ拡張）
+- [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim)（ターミナルの起動、開閉）
+- [nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)（シンタックスハイライト）
+- [vim-wakatime](https://github.com/wakatime/vim-wakatime)（[Wakatime](https://wakatime.com/)）
+- [nvim-web-devicons](https://github.com/nvim-tree/nvim-web-devicons)（アイコンの表示）
+
+#### lsp
+
+Nixvim は LSP サーバ の Nix を利用したインストールから設定の適用までをカバーできます。これは非常に便利で、[mason.nvim](https://github.com/mason-org/mason.nvim) のような Nix の管理外でサーバをインストール、管理するプラグインを利用すると、先述の通り設定の適用やサーバの更新が Nix で書かれた設定の適用タイミングから外れるので管理が難しくなります。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/plugins/lsp/default.nix
+
+キーマップについても同様に設定できます。個人的には `extra` に追記しているようなファイルに切り出すまでもない短い Lua スクリプトが補完やシンタックスハイライトなどの Lua の LSP の恩恵を受けられないことを不満に感じていますが、解決策を与えられていません。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/plugins/lsp/keymaps/default.nix
+
+##### nixd の設定
+
+多くの LSP サーバは規定の設定をそのまま適用していますが、Nix の LSP サーバである [nixd](https://github.com/nix-community/nixd) に対しては工夫して設定を与えているので紹介します。同じ Nix の LSP サーバとしては [nil](https://github.com/oxalica/nil) がありますが、nixd は NixOS や Home Manager などの options の補完が提供されている他、`pkgs.*`、`lib.*` のような Nix 式を評価して初めて得られる情報を部分的に補完する機能を提供しています。これは静的解析のみで実装することは難しく、`libnix*` を利用している恩恵であると言えます。
+
+https://github.com/nix-community/nixd
+
+nixd を最大限活かすには、「どの nixpkgs を使って評価するか」と「どの options を補完対象にするか」の情報を nixd 側に渡す必要があります。筆者の設定は大きく分けて次の3点から成ります。
+
+1. フォーマッタを [alejandra](https://github.com/kamadorueda/alejandra) に固定する
+1. nixpkgs の参照先を `stateVersion` に基づいて固定し、`pkgs` を得る式を nixd に渡す
+1. Home Manager の構成を評価して `.options` を取り出し、それを nixd に渡す
+
+nixd には `nixpkgs.expr` という設定があり、ここに `pkgs` を返す Nix 式を文字列として渡せます。nixd はこの式を評価し、その結果を基準に `pkgs.*` や `lib.*` などの補完候補を作ります。公式ドキュメントでは、プロジェクトルートの flake を `builtins.getFlake` で読み、そこから nixpkgs を参照する方法が紹介されています。
+
+```nix
+{
+  nixpkgs.expr = "import (builtins.getFlake (builtins.toString ./.)).inputs.nixpkgs { }";
+  options.nixos.expr = "(builtins.getFlake (builtins.toString ./.)).nixosConfigurations.<name>.options";
+}
+```
+
+この方式の利点は明確で、そのリポジトリの `flake.lock` に基づく nixpkgs やモジュールを前提に補完できることです。リポジトリに `nixosConfigurations` や `homeConfigurations` が揃っていれば、nixd に渡す式も単純になります。一方で、flake の outputs はホスト名やユーザ名などのローカル情報に強く依存します。この構造のままプロジェクトルートの flake を評価して options を取る方式を取ると、nixd の設定側でホスト名やホーム構成を決め打つ必要があります。
+nixd の設定を Nixvim の設定として共通化しているため、ここをホストごとに分岐させると設定の責務が混ざりやすくなります。そこで筆者は補完のための評価は、dotfiles の flake.nix とは切り離す方針にしました。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/plugins/lsp/servers/nixd/default.nix
+
+筆者は `stateVersion` を基準にして upstream の nixpkgs や Home Manager、Nixvim を参照し、nixd に渡す評価コンテキストを組み立てています。
+
+- `nixpkgs.expr` では `pkgs` を得る式を渡す
+- `options.home-manager.expr` では Home Manager を評価して `.options` を返す
+
+この手法により、dotfiles の flake.nix とは別に、nixd が補完に使う `pkgs` や options を渡して補完の動作を安定させることができ、他のユーザの dotfiles や自分の config 以外のプロジェクト[^otherwise-project]にも補完が効くようになりました。
+そして、以下のように動作するようになりました。
+
+[^otherwise-project]: シングルファイルで実験用の Nix 式を書く場合など
+
+![nixdで補完が動いている](https://storage.googleapis.com/zenn-user-upload/7025bcefa2d4-20251226.gif)
+*nixd で補完が動いている*
+
+#### indent-blankline
+
+![自分のindent-blankline](https://storage.googleapis.com/zenn-user-upload/90c6578fe6c9-20251226.png)
+
+indent-blankline は、インデントラインを表示するプラグインです。少し設定を加えており、異なるインデントには異なる色が割り当てられるような Lua スクリプトを、Nix 式で書かれた色の属性セットから組み立てています。この辺の色合いやカラースキームは完全にその場その場で割り当てているので、Nixvim に限らずツール全体のカラーテーマを揃えても良いなと思っています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/plugins/indent-blankline/default.nix
+
+#### Telescope
+
+Telescope は fuzzy finder 系のプラグインで、曖昧検索を行うことができます。筆者は本体と、ファイルブラウザ用の拡張機能を入れています。ファイル名検索、ファイル内文字列検索をよく利用しています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/plugins/telescope/default.nix
+
+できればプロジェクトルートからすべてのファイルをファイルブラウザの検索対象にしたいのですが、動作が非常に重くなってしまうので階層を制限しています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/plugins/telescope/extensions/file_browser/default.nix
+
+#### hop
+
+![hopを使用している写真](https://user-images.githubusercontent.com/506592/176885253-5f618593-77c5-4843-9101-a9de30f0a022.png)
+*[smoka7/hop.nvim](https://github.com/smoka7/hop.nvim) の README から引用*
+
+hop は Easymotion 系のプラグインで、全単語や開始文字パターンにマッチする単語に対して割り当てられたキーによって、その単語の位置にジャンプできる機能を提供します。これは非常に便利で、Neovim を開くたびに必ず使っています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/nixvim/plugins/hop/default.nix
+
+### VSCode の設定
+
+VSCode の設定は、`programs.vscode.*` から行っています。拡張機能をいくつか設定しているだけで、まだ本格的な設定は書いていません。`vscodevim.vim` に普段使いのキーマップやプラグインなどを読み込ませることと、Nix で管理する前に使っていたプラグインを入れること、その設定を書くことが目下の目標です。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/vscode/default.nix
+
+NixOS サーバ側には [nixos-vscode-server](https://github.com/nix-community/nixos-vscode-server) を入れています。これは VSCode Server が同梱する Node.js が NixOS ではそのまま動かないため、Node.js へのシンボリックリンクに書き換えるための flake で、VSCode から NixOS サーバに SSH 接続して作業するために入れています。最近ではもっぱら Neovim から作業を行っているので、あまり意識していませんでした。
+
+https://github.com/nix-community/nixos-vscode-server
+
+## ターミナルマルチプレクサの設定（tmux）
 
 ターミナルマルチプレクサは1つのターミナルエミュレータの中で、複数のターミナルを作成して切り替えたり、画面を分割して並べて表示したりするためのソフトウェアです。作業状態をセッションとして保存できるので、SSH接続が切れてもセッション内で動作しているプロセスを停止することなく、後から同じ状態に復帰することができます。私は [tmux](https://github.com/tmux/tmux/wiki) というターミナルマルチプレクサを使っています。
 
@@ -605,14 +741,14 @@ tmux のプラグイン管理としては [tpm](https://github.com/tmux-plugins/
 
 [^self-tmux-plugins-load-reason]: 筆者がなぜ自前でプラグインをロードしているのかは[2023年11月の筆者](https://github.com/momeemt/config/commit/efee7efbdef0f76e1bc69c68c6566813f0213119)に聞いてください。2025年12月の筆者には分かりかねます。申し訳ない
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/tmux/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/tmux/default.nix
 
 ### `extraConfig` の内容
 
 `programs.tmux.extraConfig` は、Home Manager が生成する tmux 設定に対して文字列を追記するためのオプションです。
 Home Manager の `programs.tmux.*` は、履歴サイズやインデックス、デフォルトシェルなどの基本設定を Nix のオプションとして提供します。一方で、キーバインドや copy-mode、ステータスラインのような項目は `tmux.conf` として書かなければいけません。そこで、`extraConfig` に `tmux.conf` の内容を追記して適用しています。
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/tmux/tmux.conf
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/tmux/tmux.conf
 
 いくつかよく使っている設定項目について紹介します。
 
@@ -635,7 +771,7 @@ https://speakerdeck.com/momeemt/tmux-nixnoshi-zhuang-wotong-sitexue-bunixosmoziy
 
 https://github.com/momeemt/tmux-nix
 
-## ✅ ターミナルエミュレータの設定（Alacritty）
+## ターミナルエミュレータの設定（Alacritty）
 
 ![背景透過が設定されたAlacritty](https://storage.googleapis.com/zenn-user-upload/eb040bd817e4-20251219.png)
 *背景が透過したシンプルなターミナルエミュレータ*
@@ -655,7 +791,7 @@ https://alacritty.org/config-alacritty.html
 
 Alacritty が起動する際に立ち上がるシェルと、OSC52 の設定を書いています。
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/alacritty/settings/terminal.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/alacritty/settings/terminal.nix
 
 Alacritty を立ち上げた時に、tmux のセッションに自動で入れるようにしています。まずセッションが存在する場合にはアタッチを行い、存在しない場合には新しく作成してセッションに入ります。
 Nix で dotfiles を管理することが他のツールと比べて優位である理由の1つとして、このような他のバイナリに依存するような設定でも移植性を維持できることが挙げられます。たとえば素の Alacritty の設定として以下のように書いたとします。
@@ -687,13 +823,13 @@ Alacritty はヒントという、ターミナルに表示されているテキ�
 
 https://zenn.dev/momeemt/articles/alacritty-hints
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/alacritty/settings/hints.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/alacritty/settings/hints.nix
 
 ### ウィンドウの設定
 
 この他にもカーソル、フォント、スクロール等の細々とした設定を書いていますが、ウィンドウの設定は気に入っているので紹介します。
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/alacritty/settings/window.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/alacritty/settings/window.nix
 
 Alacritty は[背景画像を設定することができません](https://github.com/alacritty/alacritty/issues/565#issuecomment-312459718)が、透明率（`opacity`）を設定することはできます。後述しますが5分ごとに壁紙が切り替わるようにしているので、気分を変えながらコーディングできてとても好きです。また、12月21日には [M-1 グランプリ](https://www.m-1gp.com/)の[決勝](https://tver.jp/series/sryg1lm5fy)が放送されましたが[^m-12025-tanoshimi]、お笑い好きの我々としては 8 月から[^m-1-1kaisen] YouTube に続々と公開されている予選動画を見ることに追われています[^m-1-half-year]。ブラウザを後ろに置いて、漫才を流しながら作業に取り組めるという点でも必須の設定です。
 
@@ -701,7 +837,7 @@ Alacritty は[背景画像を設定することができません](https://githu
 [^m-12025-tanoshimi]: この節は12月19日に執筆しており、まだ決勝動画を見ていません。楽しみすぎる！個人的には[たくろう](https://profile.yoshimoto.co.jp/talent/detail?id=6202)が決勝行ったのがアツすぎて落ち着くことができていない、状況です
 [^m-1-half-year]: 1年間の半分は予選がどう、誰が通った、誰々が行かなくて悔しい、などと思い続けており、そもそもお笑いの賞レースはM-1以外にもたくさんあるんです。明らかに笑いが過剰に供給され続けていて、でも、それを、追いたいんです泣
 
-## ✅ ウィンドウマネージャの設定（AeroSpace）
+## ウィンドウマネージャの設定（AeroSpace）
 
 ![AeroSpaceが動作する様子](https://storage.googleapis.com/zenn-user-upload/00471f459770-20251220.gif)
 *複数のウィンドウを切り替えたり入れ替えたりできる*
@@ -710,7 +846,7 @@ Alacritty は[背景画像を設定することができません](https://githu
 
 https://github.com/nikitabobko/AeroSpace
 
-WM は macOS と Linux デスクトップで扱いが異なります。まず、macOS の場合には OS 標準の WM が提供されており、外部ツールが配置やサイズ変更、ワークスペースの機能を追加します。一方で Linux デスクトップの場合には WM そのものを置き換える形となります。私は Linux デスクトップサ環境には [Wayland](https://wayland.freedesktop.org/) を、compositor には [sway](https://swaywm.org/) を利用していますが、そもそも Linux デスクトップ環境をほぼ整備していないので割愛します。
+WM は macOS と Linux デスクトップで扱いが異なります。まず、macOS の場合には OS 標準の WM が提供されており、外部ツールが配置やサイズ変更、ワークスペースの機能を追加します。一方で Linux デスクトップの場合には WM そのものを置き換える形となります。私は Linux デスクトップ環境には [Wayland](https://wayland.freedesktop.org/) を、compositor には [sway](https://swaywm.org/) を利用していますが、そもそも Linux デスクトップ環境をほぼ整備していないので割愛します。
 また、以前は macOS の WM として [yabai](https://github.com/asmvik/yabai) と [skhd](https://github.com/asmvik/skhd) を組み合わせて使っていました。前者は tiling 系のウィンドウマネージャ本体ですがキーバインドが割り当てられておらず全ての操作にコマンドが割り当てられています。そこで、ホットキーを実現するデーモンである後者を組み合わせて、特定のキーを入力したらウィンドウが分割されたりワークスペースが操作されるような構成にしていました。しかし、yabai は macOS のアップデートのタイミングで挙動が不安定になることが多く、設定も yabai と skhd でそれぞれ別々に行う必要があります。AeroSpace はそれが統合されており、ワークスペース切り替えの挙動も高速で安定しているところを気に入っています。
 
 ### nix-darwin vs Home Manager
@@ -725,7 +861,7 @@ Aerospace の設定は [nix-darwin](https://nix-darwin.github.io/nix-darwin/manu
 
 ### キーバインドの設定
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hosts/services/aerospace/main.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hosts/services/aerospace/main.nix
 
 フォーカスは `Alt + hjkl`、ウィンドウの移動は `Alt + Shift + hjkl` に割り当てています。サイズ変更はよく使いますが、他の操作（分割、マルチモニタの移動）などはあまり使えていません。
 ワークスペースの移動は `Alt + <workspace-n>`、ウィンドウを別のワークスペースへ飛ばす際には `Alt + Shift + <workspace-n>`ですが、これは少し楽に書けるように工夫しています。
@@ -761,19 +897,19 @@ https://github.com/momeemt/config/blob/develop/nix/profiles/hosts/services/aeros
 Aerospace の設定ではキーバインドをキー名に取り、操作を値に取るので、ワークスペース番号と数字キーの値が一致している時にはこのように記述することで簡潔に設定を表現できてミスも減らせます。
 また、Nix は for 文で手続き的に属性セットを構成するのではなく、このようにデータの構造を上手く変換する関数型言語的なアプローチで構成する[^like-ocaml]ところも面白い点の1つです。面白いだけではなく、羅列になりがちな設定の性質を扱いやすい点でも手続き的な言語で記述するよりも向いているとも思います。
 
-[^first-prior-listToAttrs]: なお、同じ`name`が複数回出た場合には[最初のものが優先されます](https://nix.dev/manual/nix/2.30/language/builtins?utm_source=chatgpt.com#builtins-listToAttrs)
+[^first-prior-listToAttrs]: なお、同じ`name`が複数回出た場合には[最初のものが優先されます](https://nix.dev/manual/nix/2.30/language/builtins#builtins-listToAttrs)
 [^like-ocaml]: 節々から [OCaml](https://ocaml.org/) の影響を受けていることを感じさせられます
 
 ### サービスモードの定義
 
 AeroSpace では**モード**という概念があり、キーバインドを切り替えることができます。モードは、`services.aerospace.settings.mode.<mode>.binding` に設定を書くことで作成できますが、デフォルトモード（`main`）から新しく作成したモードに入るためのキーバインドは別途設定しておく必要があります。私の設定では、`alt-shift-semicolon = "mode service";` がそれに該当しています。
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hosts/services/aerospace/service.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hosts/services/aerospace/service.nix
 
 基本的には[公式ドキュメント](https://nikitabobko.github.io/AeroSpace/guide)が紹介しているデフォルトの設定をそのまま書いています。サービスモードの存在を思い出した時に調べて使ってみる程度に留まっており、たとえば音量の調節は macOS のデフォルトのホットキーを利用しているので使いません。
 時折、タイリングされるとかえって作業がし辛い場合があり、`layout floating tiling`（`floating` 、`tiling` 型を切り替える）は便利そうです。この辺りはまだ未整備なので目下の課題としています。
 
-## 🚧 バージョン管理システムの設定（Git）
+## バージョン管理システムの設定（Git）
 
 バージョン管理システム（VCS）とは、ソフトウェア開発におけるプログラムやリソース等のファイルの変更履歴を管理するソフトウェアです。多くの方がそうであるように、私も [Git](https://git-scm.com/) を使っています。
 
@@ -790,7 +926,7 @@ Home Manager では [`programs.git.*`](https://nix-community.github.io/home-mana
 
 [^git-aa]: 楽なのでやってしまいますが、本来はきちんとステージングするファイルや編集範囲を決定するべきだと思います。来年の目標の1つ
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/git/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/git/default.nix
 
 ### diff を見やすくする
 
@@ -798,9 +934,26 @@ Git のデフォルトの diff は削除行の先頭に `-` が、追加行の�
 
 https://difftastic.wilfred.me.uk/
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/difftastic/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/difftastic/default.nix
 
-## ✅ Homebrew を共存させる（brew-nix）
+### GPG 鍵によるコミット署名
+
+Git ではコミットやタグに対して署名を付けることができます。署名付きコミットはそのコミットが、対応する秘密鍵を持っている人物によって作成されたことを検証でき、履歴の改ざん検知を行うことができます。
+筆者は Home Manager の [`programs.git.signing.*`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.git.signing.key) を使って、コミットに GPG 署名を付けています。
+
+```nix :nix/home/emu/default.nix
+programs.git = {
+  signing = {
+    # `gpg --list-secret-keys --keyid-format LONG`
+    key = "86F8F50B69A94DE2";
+    signByDefault = true;
+  };
+}
+```
+
+`key` には、`gpg --list-secret-keys --keyid-format LONG` を実行することで得られる LONG 形式の Key ID を指定しています。署名を有効化した後は、デフォルトで署名が行われるようにしているため、明示的に `-S` を付けなくても署名付きコミットになります。
+
+## Homebrew を共存させる（brew-nix）
 
 macOS の著名なパッケージマネージャといえば [Homebrew](https://brew.sh/) ですが、ホーム構成を Nix エコシステムに寄せたとしても Homebrew が必要になるケースがあります。
 
@@ -843,14 +996,14 @@ home.packages = with pkgs; [ brewCasks.visual-studio-code ];
 
 筆者は [Discord](https://discord.com/) や [ChatGPT](https://chatgpt.com/)、[Google Chrome](https://www.google.com/intl/ja_jp/chrome/)、Microsoft Office製品など、さまざまなアプリケーションを `pkgs.brewCasks` から入れています。
 
-https://github.com/momeemt/config/blob/develop/nix/modules/home/home/casks.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/modules/home/home/casks.nix
 
 ### パッチを当てる
 
 brew-nix は Homebrew Casks の情報を元に機械的に derivation を生成するツールであるため、これが提供する Nix 式そのままではビルドに失敗するアプリケーションも数多く存在しています。最も多く遭遇するのはハッシュ値が生成された derivation に記載されていない場合で、公式ドキュメントでも[約700パッケージが該当する](https://github.com/BatteredBunny/brew-nix#overriding-casks-derivation-attributes-for-casks-with-no-hash:~:text=There%27re%20about%20700%20casks%20without%20hashes%2C%20so%20you%20have%20to%20override%20the%20derivation%20attributes%20%26%20provide%20a%20hash%20explicitly.)と言及されています。
 私は `nix/overlays` 内に `pkgs.brewCasks` を上書きするオーバレイを作成し、`pkgs` を作成するときに適用しています。
 
-https://github.com/momeemt/config/blob/develop/nix/overlays/brew-casks.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/overlays/brew-casks.nix
 
 最も簡単なのはハッシュ値を与えるだけのパッチです。
 
@@ -877,16 +1030,16 @@ brew-nix を使ったインストールは1つ目の問題点であった、*GUI
 
 [^brew-nix-size]: この問題は brew-nix のドキュメントでも触れられています。普段の作業に影響を与えるほどディスクサイズを圧迫するアプリケーションについてもやはり、brew-nix を使わない方が得策です
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/homebrew/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/homebrew/default.nix
 
 Homebrew 自体のインストール、および `Brewfile` を適用するために、Home Manager の `home.activation.<name>` を使っています。これは、Home Manager の設定を適用して世代を切り替える際に実行されるアクティベーションスクリプトのフックです。Nix の宣言だけでは表現しづらい、外部ツールの初期化や状態を持つツールのセットアップなどの手続きを世代切り替えの際に実行できます。
 Home Manager は世代ごとに何度も同じ処理を実行する可能性があるため、書き込みをしない検証段階と、書き込みをして良い段階に分けています。今回はファイルの書き込みを行う副作用を持っているため、`writeBoundary`（書き込み境界）の後で実行させる必要があります。
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/homebrew/install-homebrew.sh
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/homebrew/install-homebrew.sh
 
 呼び出しているシェルスクリプトでは、Homebrew が存在しない場合にはインストールを行い、する場合にはスキップして `brew bundle` により `Brewfile` で指定されたアプリケーションを Homebrew にインストールさせています。こうすることで、個々のアプリケーションは Nix から切り離し、アプリケーションのインストール、更新が発生するトリガーは `darwin-rebuild` に揃えることができました。
 
-## 🚧 シークレット管理（sops-nix）
+## シークレット管理（sops-nix）
 
 dotfiles を運用する上で、シークレットをどのように管理するかは難しい問題です。以下のように3つの方法が選択肢に上がります。
 
@@ -910,11 +1063,22 @@ inputs = {
 };
 ```
 
-### システム構成で利用する
+シークレットを使う際には、以下のようにシークレット名と暗号化されたファイルやフィールドの対象、パーミッションなどを指定して `sops.secrets` で宣言します。
 
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/sops/default.nix
 
+これは NixOS や nix-darwin などシステム構成側のモジュールとして読み込んで利用しています。以下のようなシークレットを扱っていますが、これらはシステムサービスが読む、またはユーザ作成など早い段階で必要になります。
 
-## ✅ Secure Shell の設定（OpenSSH）
+- `momeemt-password`
+- `k8s-bootstrap-token`
+- `"cloudflared/emu.json"` / `"cloudflared/emu-desktop.json"`
+- `"k8s/ca.key"`
+
+一方で、ユーザ権限のプログラムが読むシークレットは管理者ユーザにが所有するファイルになると困ることもあります。たとえば、`wakatime_api_key` をシステム側で復号してしまうと、ユーザが読めるようにするには権限を緩める必要が出てきます。そこで、ホーム構成側でも別にシークレットを管理しています。
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/sops/default.nix
+
+## Secure Shell の設定（OpenSSH）
 
 Secure Shell とは暗号化と改竄検知、サーバ認証により安全に遠隔ログインやコマンド実行、ポートフォワーディングなどを行うためのプロトコルで、多くの場合 SSH と呼ばれます。SSH を実装したソフトウェアとしては [OpenSSH](https://www.openssh.org/) が広く使われており、クライアントの `ssh` や、サーバの `sshd` のほか、鍵生成のための `ssh-keygen` 、認証エージェントの `ssh-agent` 、ファイル転送のための `scp` や `sftp` などを提供しています。
 
@@ -926,7 +1090,7 @@ https://www.openssh.org/
 
 `ssh` コマンドは、`~/.ssh/config` にホスト設定を書いておくと、ホスト名だけで接続を行うことができます。Home Manager では、[`programs.ssh.matchBlocks.<name>`](https://nix-community.github.io/home-manager/options.xhtml#opt-programs.ssh.matchBlocks) に与えた設定から config ファイルが生成されます。
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hm/programs/ssh/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/ssh/default.nix
 
 基本的に IP アドレス等が公開情報のサーバは VCS に載せて管理していますが、そうでないサーバは sops-nix によって暗号化したファイルを適用時に復号化し、`includes` により読み込ませています。現在は秘密鍵が指定したパス（`identityFile`）に存在することを要求していますが、できれば秘密鍵も暗号化して VCS に載せたいと思っています。しかし、作業ミスによって生まれる被害が自分が管理するサーバ以外にも及ぶため怖くてそれは実現できていません。sops の代わりに 1Password からクレデンシャルを利用する [opnix](https://github.com/brizzbuzz/opnix) というツールもあり、将来的にはそちらに移ることも考えています[^or-bitwarden-nix]。
 
@@ -938,22 +1102,54 @@ https://github.com/brizzbuzz/opnix
 
 基本的にはできるだけ厳しく設定を書くようにしています。パスワードやキーボードインタラクティブ系の認証方式をすべて切っていて、公開鍵認証に寄せています。また、許可ユーザを `momeemt` に絞っています。
 
-https://github.com/momeemt/config/blob/develop/nix/profiles/hosts/services/openssh/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hosts/services/openssh/default.nix
 
 OpenSSH については勉強中なので [`sshd_config` のマニュアル](https://man.openbsd.org/sshd_config.5)を見ながらおおよその設定をしましたが、来年はもう少し解像度を高められると良いなと思っています。
 
 https://man.openbsd.org/sshd_config.5
 
-## LLM の管理と設定（mcp-server-nix）
+## Cloudflare Tunnel を通す
 
-## ネットワークの設定
+自宅の NixOS サーバには、外出先から SSH 接続したり、リモートデスクトップで操作したくなる場面があります。一方で、集合住宅の備え付け回線やキャリア側の NAT などの事情により、こちらから自由にポート解放やルータ設定ができず、サーバに対する inbound な接続を受けられないことがあります。
+この問題に対して、筆者は [Cloudflare](https://www.cloudflare.com/) が提供する [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/) を使っています。Cloudflare Tunnel はサーバ側で `cloudflared` を動かし、Cloudflare のネットワークへ outbound な接続を張っておくことで、外部から Cloudflare 経由でサーバへ到達できるようにする仕組みです。外部へ公開するためにサーバのグローバル IP に直接アクセスさせる形を取らず、Cloudflare 側の DNS とトンネルの対応付けによってトラフィックを中継してくれます。
 
-## 🚧 Cloudflare Tunnel を通す
+https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/
 
-自宅の NixOS サーバは外から接続したい場合があります。私はネットワークを提供するタイプの集合住宅に住んでおり、ネットワーク回線を別に引いていないためグローバル IP アドレスからサービスを公開することができません。そこで、[Cloudflare]() が提供する [Cloudflare Tunnel]() を通すことでアクセスできるようにしています。
-NixOS は、`services.cloudflared.*` で Cloudflare Tunnel が設定できるオプションを公開しています。
+Cloudflare Tunnel は HTTP だけでなく、SSH やリモートデスクトップなどのプロトコルも対象にできます。NixOS では `services.cloudflared` モジュールが用意されているので宣言的に `cloudflared` の常駐とトンネルの設定を記述できます。
 
-## ✅ NixOS module を定義する
+https://wiki.nixos.org/wiki/Cloudflared
+
+トンネルを UUID ごとに定義しています。ま他、`ingress` オプションによってどのホスト名へのアクセスをローカルのどのサービスへ転送するかを定義します。認証情報が含まれたファイルについては、先述のシークレット管理によって暗号化したファイルを VCS に載せておき、復号化済みのパスを渡しています。
+
+```nix :nix/hosts/emu/configuration.nix
+services.cloudflared = {
+  enable = true;
+  tunnels = {
+    "053a4ebe-82c3-485a-bc8b-f0768cbe1d11" = {
+      credentialsFile = "${config.sops.secrets."cloudflared/emu.json".path}";
+      ingress = {
+        "emu.momee.mt" = {
+          service = "ssh://localhost:22";
+        };
+      };
+      default = "http_status:404";
+    };
+    "b2b83e61-577c-45e7-b1c0-0961503e8d8d" = {
+      credentialsFile = "${config.sops.secrets."cloudflared/emu-desktop.json".path}";
+      ingress = {
+        "emu-desktop.momee.mt" = {
+          service = "rdp://localhost:3389";
+        };
+      };
+      default = "http_status:404";
+    };
+  };
+};
+```
+
+この設定により、グローバル IP に直接アクセスすることなく外部から自宅のサーバにアクセスすることができます。
+
+## NixOS module を定義する
 
 システム構成やホーム構成を単に共通化したいだけの場合はファイルに切り出して `imports` にファイルパスの配列を渡すことで展開されます。一方で、ホストやユーザごとに共通化した内容を切り替えたい場合、具体的に言えば引数を渡したい場合があります。
 その場合は `imports` で実現することは難しく、モジュールを作成する必要があります。
@@ -973,7 +1169,7 @@ https://nixos.wiki/wiki/NixOS_modules
 `imports` は、これまで使ってきた `imports` と同様で、評価したい他のモジュールのパスをリストで渡します。基本的には設定の共通化に用いてきました。`options` は、オプションの定義です。すなわち、これまで出てきた `programs.zsh.enable` が `bool` 型の値を受け取る、`programs.zsh.initContent` が `string` 型の値を受け取る、などオプション1つ1つの性質について定義します。`config` は、そのモジュールで定義されたオプションが使用された際に、実際にどのような値に評価されるかを定義します。たとえば、`programs.zsh.enable` が `true` になった場合、Home Manager はユーザ環境で `zsh` が使えるようにインストールしてパスを通します。そのように具体的な評価を定義します。
 では、具体例を見てみましょう。私は Home Manager や nix-darwin などの既存のモジュールに欲しい設定がなかった場合には NixOS module を定義するようにしています。以下に、[GNU Wget](https://www.gnu.org/software/wget/) のための NixOS module を示します。
 
-https://github.com/momeemt/config/blob/develop/nix/modules/home/programs/wget/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/modules/home/programs/wget/default.nix
 
 これは、GNU Wget を XDG Base Directory に準拠させるために書きました。詳細を見ていきましょう。
 
@@ -1003,7 +1199,7 @@ https://github.com/momeemt/config/blob/develop/nix/modules/home/programs/wget/de
 
 https://speakerdeck.com/momeemt/tmux-nixnoshi-zhuang-wotong-sitexue-bunixosmoziyuru
 
-## ✅ 壁紙を定期的に貼り替えるサービス（set-wallpapers）
+## 壁紙を定期的に貼り替えるサービス（set-wallpapers）
 
 前節で NixOS module を定義する方法について見てきました。本節ではその続きとして、自作スクリプトを定期実行サービスとして登録し、 NixOS module によって運用する例を紹介します。対象は macOS + nix-darwin です。後述の通り、AppleScript を利用するため Linux では動作しません。
 私はジブリ映画が好きなのですが[^ghibli]、デスクトップ環境の壁紙を STUDIO GHIBLI が配布している画像に設定しています。
@@ -1021,13 +1217,13 @@ macOS は OS のバージョン更新などで壁紙設定がリセットされ�
 
 壁紙の設定は [AppleScript](https://developer.apple.com/library/archive/documentation/AppleScript/Conceptual/AppleScriptX/AppleScriptX.html)、壁紙の選択はシェルスクリプトで行い、組み合わせています。
 
-https://github.com/momeemt/config/blob/develop/nix/modules/host/services/set-wallpapers/set.applescript
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/modules/host/services/set-wallpapers/set.applescript
 
 AppleScript を使っている理由は、依存ライブラリが不要で最も簡単に壁紙を変更できるためです。実に7年ぶりです[^seven-years-ago]。
 
 [^seven-years-ago]: 当時は英単語帳を [Numbers](https://www.apple.com/jp/numbers/) で管理していて、特定の条件を満たすテキストの色を変えるのに使っていた記憶があります
 
-https://github.com/momeemt/config/blob/develop/nix/modules/host/services/set-wallpapers/main.sh
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/modules/host/services/set-wallpapers/main.sh
 
 Nix 側から環境変数 `WALLPAPERS` を介して壁紙候補の画像パス一覧を `main.sh` に渡します。`main.sh` はその中からランダムに画像を1枚選び、 `set.applescript` を実行して壁紙を変更します。また、連続で同じ画像が選択されるのは避けたいので、`~/Library/Application Support/set-wallpapers` 配下に前回選んだ壁紙を状態ファイルとして保存し、次回実行時に参照するようにしています。
 
@@ -1035,7 +1231,7 @@ Nix 側から環境変数 `WALLPAPERS` を介して壁紙候補の画像パス�
 
 上のスクリプト群は、`pkgs.writeShellScript`によって Nix の derivation として扱えるようにしています。そうすることで、スクリプトが `/nix/store` 配下にコピーされるため dotfiles リポジトリ内のファイルパスや作業ツリーの状態に依存しなくなります。したがって、適用後にリポジトリの内容が変わっても、サービスが参照する実体は変わりません。
 
-https://github.com/momeemt/config/blob/develop/nix/modules/host/services/set-wallpapers/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/modules/host/services/set-wallpapers/default.nix
 
 壁紙の貼り替えを AppleScript で行っているため、この NixOS module も nix-darwin からのみ呼ばれることを前提としています。nix-darwin は、macOS 標準のサービス管理ソフトウェアである [launchd](https://github.com/apple-oss-distributions/launchd/tree/launchd-842.92.1) へユーザサービスを登録するための [`launchd.user.agents`](https://nix-darwin.github.io/nix-darwin/manual/#opt-launchd.user.agents) が用意されています。この設定で [`launchd.user.agents.<name>.serviceConfig.StartInterval`](https://nix-darwin.github.io/nix-darwin/manual/#opt-launchd.user.agents._name_.serviceConfig.StartInterval) を `300`（秒）に指定すると、ユーザ領域の launchd が5分ごとにスクリプトを実行します。結果として、ログイン後は壁紙が定期的に切り替わるようになります。
 
@@ -1043,9 +1239,9 @@ https://github.com/momeemt/config/blob/develop/nix/modules/host/services/set-wal
 
 ここまで作成したモジュールを、次のように適用しています。画像を置かずに [`pkgs.fetchurl`](https://nixos.org/manual/nixpkgs/stable/#sec-pkgs-fetchers-fetchurl) で入手しているので、不必要にリポジトリサイズが大きくならない点を気に入っています。
 
-https://github.com/momeemt/config/blob/develop/nix/hosts/uguisu/wallpapers.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/hosts/uguisu/wallpapers.nix
 
-## ✅ Docker イメージのビルド
+## Docker イメージのビルド
 
 GitHub Actions でホーム構成を適用した Docker イメージをビルドしています。dotfiles を公開しているユーザは、自分の dotfiles をインストールするための方法も併せて整備している場合があります。たとえば、[mathiasbynens/dotfiles](https://github.com/mathiasbynens/dotfiles) は、Git を使ったインストール方法や、Git を使わずにインストールするためのスクリプトを紹介しています。
 
@@ -1069,7 +1265,7 @@ Docker コンテナは仮想マシンではなく、ホスト OS のカーネル
 
 derivation をそのままコンテナに固める際は、[`pkgs.dockerTools.buildImage`](https://ryantm.github.io/nixpkgs/builders/images/dockertools/) が便利です。指定した derivation の依存だけを取り込んだイメージを作れるため、Dockerfile によってイメージを作成した場合よりも構成要素を絞り込みやすく、コンテナイメージを最小化するために非常に便利です。しかし、Home Manager は activation によってホームディレクトリ以下へリンクやファイルを配置するため、`buildImage` でストアのパスをコピーするだけでは適用済みの状態にはなりません。そこで、ホーム構成を適用するような `RUN` 命令を含めた Dockerfile を作成してコンテナイメージを作成します。
 
-https://github.com/momeemt/config/blob/develop/.devcontainer/Dockerfile
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/.devcontainer/Dockerfile
 
 Nix のインストールを行い、dotfiles をコピーし、`nix run` からホーム構成を適用しています。1つ注意点として、GitHub Actions 等で docker buildx の QEMU エミュレーション経由で aarch64 をビルドしている場合、seccomp BPF のロードが `Invalid argument` で失敗する例があります。そこでインストールを実行する前に `/etc/nix/nix.conf` に `filter-syscalls = false` を設定することで回避できるという例がありますが、これはセキュリティ上の影響があるため注意が必要です。
 
@@ -1079,13 +1275,13 @@ https://github.com/NixOS/nix/issues/5258
 
 また、適用するホーム構成はコンテナイメージ用に別で用意しています。
 
-https://github.com/momeemt/config/blob/develop/nix/home/example/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/home/example/default.nix
 
 ### コンテナイメージの公開
 
 Docker イメージは、GitHub Container Registry (GHCR) で[公開](https://github.com/momeemt/config/pkgs/container/config)しています。現時点では明確なバージョン管理をしていないので、`develop` ブランチを更新するたびにデバッグ用にイメージをビルドしています。来年は nixpkgs のように、`yy.mm` バージョン（2025年11月のリリースは、`25.11`）で管理していきたいと思っています。
 
-https://github.com/momeemt/config/blob/develop/.github/workflows/image.yaml
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/.github/workflows/image.yaml
 
 ### コンテナイメージの利用
 
@@ -1095,7 +1291,7 @@ https://github.com/momeemt/config/blob/develop/.github/workflows/image.yaml
 docker pull ghcr.io/momeemt/config:unstable
 ```
 
-## ✅ Terraform
+## Terraform
 
 Terraform は、クラウドや SaaS の設定をコードで管理するための Infrastructure as Code（IaC）ツールです。HCL（HashiCorp Configuration Language）でどのリソースをどんな設定で作るかを宣言し、`terraform plan` で変更差分を確認した上で、`terraform apply` で実際に反映します。外部サービスは provider を通して API 操作として適用されます[^exclude-sops]。適用結果は state として保存され、次回の差分計算に使われます。Terraform は provider を通じて外部サービスの現在状態を読み取り、宣言した設定との差分を確認できるため、ローカル環境の構成管理が中心の Nix と役割分担しやすいです。今年利用した provider は以下の通りです。
 
@@ -1113,13 +1309,13 @@ https://registry.terraform.io/providers/cloudflare/cloudflare
 
 基本的に DNS レコードの管理を移しました。`cloudflare_dns_record` によって、レコードを作成できます。ダッシュボードから過去に追加した、現在は使われていないレコードを整理するきっかけにもなりました。現在はまだ Cloudflare Tunnel / Zero Trust の設定や、Workers & Pages については Terraform に移せていないので、今後の課題としています。
 
-https://github.com/momeemt/config/blob/develop/terraform/cloudflare.tf
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/terraform/cloudflare.tf
 
 ### GitHub
 
 SSH 公開鍵、および GPG 公開鍵の反映を移しました。マシンが増えてからコミットへの署名を設定済みのマシンとそうでないマシンが混在しておりきちんと把握できていませんでしたが、テキストベースの設定に移行してからはその見通しが良くなりました。
 
-https://github.com/momeemt/config/blob/develop/terraform/github.tf
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/terraform/github.tf
 
 GitHub provider からは、リポジトリやGitHub Actions、Issues のラベルの設定なども行うことができます。特にブラウザから設定した GitHub Actions のシークレットはどのリポジトリに何のシークレットがあるのか追いづらく、値も後から確認できないため困ることが多いので、移行する価値があると感じています。
 
@@ -1133,7 +1329,7 @@ https://github.com/carlpett/terraform-provider-sops
 
 provider を扱う際に必要な API トークンや、その他 VCS でそのまま扱うことが望ましくない情報については sops 経由で扱うようにしています。
 
-https://github.com/momeemt/config/blob/develop/terraform/sops.tf
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/terraform/sops.tf
 
 ### ディレクトリごとに `devShell` を切り替える
 
@@ -1163,7 +1359,7 @@ use flake ../#terraform
 
 異なる `devShell` に入りたいディレクトリでは、`CHILD_ENVRC` を定義してから `source_up` で親の（すなわち先ほどの）`.envrc` を呼び出します。次に、個別の `devShell` を定義しているファイルを監視対象にしてから、目的の `devShell` に入ります。このように `.envrc` を書き分けることで、ディレクトリごとに異なる開発環境に入ることができるため、デフォルトの `devShell` が必要以上に肥大化することを防げます。
 
-## 🚧 仮想マシンを作成する
+## 仮想マシンを作成する
 
 この節では、自宅に Kubernetes クラスタを導入するために仮想マシンを作成する方法について触れます。まず、NixOS で Kubernetes クラスタを構築すること自体は可能ですが、一般的な kubeadm ベースの手順をそのまま適用するのは難しいです。一般的には `kubeadm init` や `kubeadm join` を中心に設計されており、kubelet の設定や証明書などの管理も `kubeadm` が握っています。一方で、NixOS には `services.kubernetes` のように apiserver、controllerManager、scheduler、kubelet、etcd などをモジュールとして直接構成する仕組みがあり、kubeadm の手順や生成物とは異なります。特にクリティカルなのは周辺コンポーネントが特定のパスや配置を要求することがあり、NixOS では追加の設定や activation script が必要になります。
 一方で、Kubernetes クラスタを NixOS 環境で実現するためのツールはいくつか提案されています。
@@ -1192,7 +1388,17 @@ https://nixos.wiki/wiki/Libvirt
 
 https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/lib/mkK8sWorker/default.nix#L80C1-L175C50
 
+ここで作っている VM は、ホスト側では libvirt の domain 定義として管理し、ゲスト側の OS 初期化と kubeadm 実行は cloud-init とスクリプトに寄せています。NixOS 側でやるのは、起動に必要なファイル（ディスクと ISO）を用意して、VM の定義を libvirt に反映して起動するところまでです。
+
 ### ネットワークの準備
+
+VM はホストの bridge に接続し、cloud-init の network-config で静的 IP を設定します。
+
+- ゲスト側では DHCP を使わず、IP アドレスとデフォルトゲートウェイを固定する
+- DNS は固定の resolver を指定する
+- インタフェース名の違いは cloud-init の match（`en*`）で吸収する
+
+実装上は `pkgs.formats.yaml` を使って cloud-init が読む YAML を Nix から生成しています。この方式にすると、VM ごとの IP などを Nix の引数として与えるだけで network-config を作れるようになります。
 
 ### マスターノードを作成する
 
@@ -1203,21 +1409,66 @@ https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/
 1. NixVirt で libvirt domain を生成し、ISO とディスクをアタッチして起動する
 1. ゲスト側（Ubuntu）で cloud-init が動作して、payload ISO をマウントして `kubeadm init` を実行する
 
-https://github.com/momeemt/config/blob/develop/nix/lib/mkK8sMaster/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/lib/mkK8sMaster/default.nix
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/lib/mkK8sMaster/main.sh
 
-https://github.com/momeemt/config/blob/develop/nix/lib/mkK8sMaster/main.sh
+このモジュールは大きく次の3つの要素でできています。
+
+- libvirt の domain 定義
+  - NixVirt で XML を生成して `qemu:///system` に反映する
+- ディスク作成
+  - Ubuntu の base image を backing file にした qcow2 を作る
+- cloud-init 用 ISO と payload 用 ISO の生成
+  - systemd oneshot で seed ディレクトリにファイルを集めて ISO を生成する
+
+ディスク作成は `vm-disk-<name>` の oneshot で行い、初回だけ qcow2 を作って以降は再作成しないようにしています。これにより VM を何度起動し直してもディスクが消えない運用になります。ディスクは `/var/lib/libvirt/images/<name>.qcow2` に置き、Ubuntu base image のパス（`ubuntuImage`）を backing file として参照します。
+cloud-init と payload の準備は `vm-cloudinit-<name>` の oneshot で行います。ここでは seed ディレクトリを作成し、cloud-init が読む user-data / meta-data / network-config を生成して seed ISO を作ります。加えて、別の CD-ROM として payload ISO を作り、ここに Kubernetes 初期化で必要なファイルをまとめて詰めています。payload ISO には次のようなものを入れています。
+
+- Kubernetes の CA 証明書と CA 秘密鍵
+- kubeadm の bootstrap token
+- ゲスト側で実行する bootstrap スクリプト
+- Argo CD の app-of-apps など、クラスタ初期化後に適用したい manifest
+
+このうち CA 秘密鍵や token は sops-nix で管理しています。そのため `vm-cloudinit-<name>` の service は `after = ["sops-nix.service"];` に設定しており、ホスト側で復号が終わった後に ISO を作るようにしています。Nix の build ではなくホストの oneshot で復号済みファイルのパスを参照して seed ディレクトリに配置し、そこから ISO を生成します。
+ゲスト側（Ubuntu）では cloud-init の `runcmd` から payload ISO を `/seed` にマウントし、`/seed/k8s-master-bootstrap.sh` を実行します。`k8s-master-bootstrap.sh` は、kubeadm を実行する前提を整えた上で `kubeadm init` を実行し、その後 CNI（[flannel](https://github.com/flannel-io/flannel)）と Argo CD のインストール、app-of-apps の apply までを行います。ここまでを初回の起動で実行することで、VM を立ち上げるだけで control plane の初期化ができるようにしています。
 
 #### cloud-init の設定ファイルを Nix で生成する
 
-[`pkgs.formats.yaml`]() を使って、cloud-init が読む YAML を Nix から生成します。
+`pkgs.formats.yaml` を使って、cloud-init が読む YAML を Nix から生成します。
+
+- network-config は VM の IP や gateway を引数で受け取り、静的 IP 設定の YAML を生成する
+- user-data は ubuntu ユーザの作成と SSH 公開鍵の登録、必要なパッケージの導入、起動後のコマンド実行（payload のマウントと bootstrap）を YAML として生成する
+- meta-data は instance-id と hostname を固定する
+
+このように Nix から生成すると、VM のパラメータ（IP、UUID、リソース配分など）を引数として扱えるため、複数台の VM を同じ構造で簡単に立ち上げられるようになります。
 
 ### ワーカーノードを作成してクラスタに参加させる
 
+ワーカーノードも同様の構造で、ディスク作成と cloud-init / payload の ISO 作成を oneshot で行い、NixVirt で domain 定義を libvirt に反映して起動します。
 
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/lib/mkK8sWorker/default.nix
+
+ワーカーノード側の cloud-init は、起動後に payload ISO をマウントし、`k8s-worker-bootstrap.sh` を実行して containerd と kubeadm をセットアップした上で `kubeadm join` を行います。`kubeadm join` には `bootstrap token` と `discovery-token-ca-cert-hash` が必要なので、token は sops-nix で復号したものを payload ISO に詰め、CA のハッシュはホスト側から引数として渡します。
+マスターとワーカーを分けたことで、ホスト側の責務は VM の起動に必要なファイルを生成して起動すること、ゲスト側の責務は payload を元に kubeadm を実行することに分割できます。クラスタの台数を増やしたい場合は、同じ関数を別の `name`、`uuid`、`ipAddress` で呼び出すことでワーカーノードを増やすことができます。
 
 ## Kubernetes
 
-## ✅ 2026年にやりたいこと
+Kubernetes クラスタは立てられましたが、中で動いているサービスはほとんどありません。Kubernetes 自体の学習もまだ始めたばかりなので、来年度以降の目標とします。[Argo CD](https://argo-cd.readthedocs.io/en/stable/) という Pull 型の GitOps ツールを使っていて、ダッシュボードを眺めるのは楽しいです。
+
+![Argo CDが動く様子](https://storage.googleapis.com/zenn-user-upload/bd8b5461a2ad-20251226.png)
+*Argo CD が動く様子*
+
+テスト用に [nginx](https://nginx.org/en/) だけ立てています。目下の目標は、[Mastodon](https://joinmastodon.org/) を立てて [X](https://x.com) を普段使いをするのをやめたい[^why-hate-x]です。
+
+[^why-hate-x]: 考えを整理するために作業中や考えたことをマイクロブログに書き出すことがあるのですが、そのデータを自由に扱えないのが本当に嫌です。最近はアーカイブのリクエストすら通りません。本当に良くない態度だと思います
+
+https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/k8s/nginx/deployment.yaml
+
+YAML マニフェストへのパッチ適用ツールには [Kustomize](https://kustomize.io/) を使っています。
+
+https://kustomize.io/
+
+## 2026年にやりたいこと
 
 dotfiles について、来年に取り組みたいことについて説明します。
 
@@ -1269,6 +1520,7 @@ https://github.com/nix-community/nix-init
 
 # 終わりに
 
+記事が長くなりすぎてしまったため、投稿前に確認はしていますが誤字や誤りが含まれている可能性があります。ぜひコメント欄でご指摘いただくか、この記事を管理している [GitHub リポジトリ](https://github.com/momeemt/Zenn/blob/main/articles/dotfiles2025.md)の方にご連絡ください。
 もし私の dotfiles に興味を持っていただけた方は、ぜひリポジトリにスターを付けたり、コンテナイメージを試したり、コメントで感想を送ったりしていただければ励みになります！
 
 https://github.com/momeemt/config

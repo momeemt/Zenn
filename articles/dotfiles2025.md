@@ -14,7 +14,7 @@ published: false
 https://github.com/momeemt/config
 
 :::message
-これは[Nix Advent Calendar 2025](https://adventar.org/calendars/11657)の25日目の記事です。メリークリスマス！🎄
+これは[Nix Advent Calendar 2025](https://adventar.org/calendars/11657)の25日目の記事です。遅刻しました、ごめんなさい！遅ればせながら、メリークリスマス！🎄
 :::
 
 # dotfiles
@@ -68,13 +68,27 @@ ln -s "$repo_dir/vim/.vimrc" "$HOME/.vimrc"
 
 こうしたファイル配置と環境の差分吸収の問題は、chezmoi や GNU Stow などのツールを導入することで解決できます。
 
-## 🚧 dotfiles 管理ツールを利用する
+## ✅ dotfiles 管理ツールを利用する
 
 複雑な dotfiles を扱う場合、chezmoi や GNU Stow が提供する機能を利用することで処理を共通化して簡潔に記述することができます。それぞれについて見てみましょう。
 
 ### chezmoi
 
+[chezmoi](https://github.com/twpayne/chezmoi) は、複数マシンにまたがって dotfiles を管理するためのツールです。単なるシンボリックリンクを張るスクリプトを運用するのに比べて、テンプレートによる環境差分の吸収や、パスワードマネージャとの連携、ファイル全体の暗号化、スクリプトの実行などを標準機能として持っています。
+
 https://github.com/twpayne/chezmoi
+
+基本的にはリポジトリを初期化して差分を確認し、dotfiles を環境に適用する、という[流れ](https://www.chezmoi.io/user-guide/command-overview/)になります。
+
+```sh
+chezmoi init <repo>
+chezmoi diff
+chezmoi apply -v
+```
+
+chezmoi は、内部的には dotfiles を管理用ディレクトリ（source state）に保持し、そこから実際にホームディレクトリに配置される成果物（target state）を計算して反映します。
+また、[テンプレート](https://www.chezmoi.io/user-guide/templating/)によって環境の差分を吸収することができます。拡張子が `.tmpl` であるファイルは、Go 言語の `text/template` 形式として扱われ、`.chezmoi.os` のような変数を使って OS ごとに内容を切り替えられます。テンプレート変数は、`chezmoi data` コマンドを実行することで確認できます。
+シークレット管理はファイル全体の暗号化を行ってリポジトリに乗せるか、[1Password CLI などを利用して](https://www.chezmoi.io/user-guide/password-managers/1password)パスワードマネージャと連携することで、テンプレート内でパスワードマネージャの項目を読み出す関数を使って値を埋め込むことによって実現します。
 
 chezmoi の概要を掴むために以下の記事が参考になりました。
 
@@ -82,27 +96,98 @@ https://zenn.dev/ryo_kawamata/articles/introduce-chezmoi
 
 ### GNU Stow
 
+[GNU Stow](https://www.gnu.org/software/stow/) は、別々のディレクトリに置かれたパッケージを1つのディレクトリツリーにインストールされたように見せるためにシンボリックリンクを張るツールです。もともとはソースからビルドした複数のソフトウェアを衝突させずに管理するために開発されましたが、ホームディレクトリの設定ファイル管理にも用いられています。
+
 https://www.gnu.org/software/stow/
+
+dotfiles の管理ツールとして使う場合には、リポジトリ直下にツールごとにディレクトリを作成し、その中にホームディレクトリからの相対パスでファイルを作成します。その後、以下のコマンドを実行することでシンボリックリンクを作成できます。
+
+```sh
+cd dotfiles
+stow -t ~ vim git zsh
+```
+
+Stow は内部状態を保持せず、今あるディレクトリ構造からシンボリックリンクを計算するだけのシンプルなツールです。ドライラン、削除、再作成などの機能が提供されています。また、dotfiles 向けの機能として `--dotfiles` オプションが提供されています。これは、ドットファイル（たとえば `.vimrc`）をそのまま置く代わりに、`dot-` 接頭辞で（たとえば `dot-vimrc`）管理して、適用時に `.` に自動で変換してリンクを張ることができます。
+既存のファイルが存在する場合には衝突として終了しますが、`--adopt` オプションによって既存ファイルをリポジトリ側に取り込むことができます。
+
+### dotfiles 管理ツールの限界
 
 他にも、[yadm](https://yadm.io)、[dotdrop](https://github.com/deadc0de6/dotdrop)、[Dotbot](https://github.com/anishathalye/dotbot)、[rcm](https://github.com/thoughtbot/rcm)、[homeshick](https://github.com/andsens/homeshick)、[Ellipsis](https://github.com/ellipsis/ellipsis)などの同様のツールが存在します。自分が扱う dotfiles の規模や要求に応じて、適切なツールを選択していくと良いでしょう。
 一方で、これらの管理ツールではカバーできないことも存在します。
 
 - 設定を管理することはできますが、コマンドやプラグイン自体は別の手段で管理する必要がある
   - バージョンの差やそのソフトウェアが他のツールがインストールされていることを前提にしていることにより必ずしも同じ環境を再現することは難しい
-- 適用が Atomic ではなく、ロールバックすることが難しい
+- 適用が Atomic ではなく、事前確認はできるがトランザクションとして巻き戻せる設計ではない
 
 このような要求に対しては、設定ファイルの管理ツールとパッケージマネージャが同一か、あるいは協調して動作できるソフトウェアが必要です。
-そこで登場するのがビルドシステムの Nix と、Nix を用いたユーザ空間の設定ツールである home-manager です。
 
-## 🚧 Nix / NixOS
+## ✅ Home Manager を利用する
 
-Nix について学びたい場合は、[asa1984]() さんの [Nix入門](https://zenn.dev/asa1984/books/nix-introduction) や [Nix入門: ハンズオン編](https://zenn.dev/asa1984/books/nix-hands-on) がおすすめです。
+dotfiles 管理ツールは設定ファイルを所定の場所に置くことを中心に責任を持っていますが、ソフトウェアそのもの（バイナリ、プラグイン、依存関係のバージョン）をインストールすることは難しいです。これも含めて管理したい場合には [Home Manager](https://github.com/nix-community/home-manager) が便利です。Home Manager は、ビルドシステムの Nix を用いたホーム構成の適用ツールです。
+
+https://github.com/nix-community/home-manager
+
+Home Manager を始めとした Nix のエコシステムを利用して dotfiles を管理すれば、以下の要求をすべて満たすことができます。
+
+- ビルドマニフェストを記述するドメイン固有言語である Nix を使って、環境差を吸収する記述を行えます
+- 適用が Atomic で、ロールバックや冪等性の保証、ファイル退避の処理が考慮されています
+- [sops-nix](https://github.com/Mic92/sops-nix) など、シークレット管理をするためのモジュールが提供されています
+- ビルドシステムおよびパッケージマネージャとして働く Nix と協業して、ソフトウェアそのものを密結合に管理できます
+  - Nix を用いてパッケージを `/nix/store` 配下にインストールできます
+  - Neovim の設定だけでなく、Neovim が環境で利用可能であるかについても保証できます
+
+インストール方法については、以下のマニュアルを参照してください。
+
+https://nix-community.github.io/home-manager/
+
+### Nix
+
+Home Manager は Nix を利用して作られたソフトウェアであり、扱うには Nix への理解が必要です。Nix は近年少しずつ注目されている、ビルドシステム（兼パッケージマネージャ、兼ドメイン固有言語）です。
+
+https://nixos.org/
+
+Nix はそれぞれの機能をまとめて提供するソフトウェアで、以下のような性質を持っています。
+
+- ドメイン固有言語（DSL）
+  - ビルドを記述するためのドメイン固有言語を Nix と呼びます
+  - 動的型付き純粋関数型言語です
+    - 遅延評価モデルを採用しています
+  - Nix 式を評価すると、入出力やビルドの実行方法が記述された derivation という中間表現が得られます
+- ビルドシステム
+  - DSL によって記述された入出力、ビルドの実行方法から、成果物を得るためのプロセスを実行します
+  - 事前に明示されないネットワーク[^fixed-output-derivation]や環境変数などへのアクセスを禁止したサンドボックス内でビルドを行います
+  - 入力として指定されたオブジェクトの読み取りと、指定された出力への書き込みのみがデフォルトで許される純粋関数的なビルドを提供します
+    - 実際にはパッケージ固有の性質やビルド過程の要因が絡むために完全な純粋関数を実現することは難しいですが、このようなサンドボックスを提供しないビルドシステムと比べて高い再現性を実現します
+    - [Reproducible builds](https://reproducible-builds.org/) （どんな環境であれビットレベルで同一の成果物を得るためのビルド）というより強い考え方も存在します
+- パッケージマネージャ
+  - ビルドシステムによってビルドされた成果物を取得するための機能を提供します
+  - プログラミング言語に付属するビルドシステム（[Cargo](https://github.com/rust-lang/cargo) など）はパッケージマネージャと一体化していることは珍しくありません
+  - Nix の公式が提供する [nixpkgs](https://github.com/NixOS/nixpkgs) は現在12万件以上のパッケージ定義を提供する最大級のパッケージリポジトリですが、これに限らずサードパーティのパッケージリポジトリからもパッケージを入手できます
+  - Arch Linux のユーザリポジトリ [AUR](https://aur.archlinux.org/) に近い仕組みである、[NUR](https://github.com/nix-community/NUR) が存在します
+
+[^fixed-output-derivation]: 現実的にネットワークアクセスを完全に禁止してビルドを行うことはできません。そこで、[ネットワークを介して入手するリソースのハッシュ値を事前に与えることで再現性を担保することを許可する仕組み](https://nix.dev/manual/nix/2.32/store/derivation/outputs/content-address.html)が存在します
+
+プログラミング言語に付属するビルドシステムは特定の言語や環境を想定しています。たとえば Cargo は Rust で書かれたプログラムをビルドしますし、Nimble は Nim で書かれたプログラムをビルドします。しかし、Nix は汎用的なビルドシステムであり、「事前に与えられた入力から情報を読み取り、指定された出力への書き込みを行う」というルールさえ守ればどんなものでも対象として扱うことができます。
+ビルドシステムやパッケージマネージャと dotfiles には一見関係があるようには見えないので、抵抗感を持つ方も少なからずいらっしゃるかと思いますが、Home Manager は、事前に与えられた入力から情報を読み取り、ホーム構成を出力することに特化した、Nix のルールの上に成り立つソフトウェアであると考えられます。
+
+この記事では Nix の文法については扱いません。Nix について学びたい場合は、[asa1984](https://zenn.dev/asa1984) さんの [Nix入門](https://zenn.dev/asa1984/books/nix-introduction) や [Nix入門: ハンズオン編](https://zenn.dev/asa1984/books/nix-hands-on) がおすすめです。
 
 https://zenn.dev/asa1984/books/nix-introduction
 
 https://zenn.dev/asa1984/books/nix-hands-on
 
-## home-manager
+### NixOS
+
+ホーム構成が Nix で扱えるならシステムサービスや OS の設定なども Nix で行えた方が便利です。これを実現したのが、Nix をベースにした Linux ディストリビューションである [NixOS](https://nixos.org/manual/nixos/stable/) です。NixOS は Nix によるパッケージ管理を前提に、nixpkgs に含まれるモジュールとパッケージを組み合わせてシステム全体を構成します。
+
+https://nixos.org/manual/nixos/stable/
+
+NixOS の設定は基本的に `/etc/nixos/configuration.nix` を編集して、`nixos-rebuild switch` コマンドを使って反映する、という流れになります。1回の反映で generation が生成され、それを切り替える形で運用を行うため、設定を変更した履歴が残ります。`nixos-rebuild switch --rollback` コマンドによって、直前の generation に戻すこともできます。ブートローダから過去の generation を選んで起動できるため、もし設定を誤って起動できなくなったとしても、過去の環境を復旧させるのがとても簡単です。
+現実的には NixOS にもデフォルトでは状態を持つ領域があり、宣言的に管理する範囲をどこまで広げるかを設計や運用によって決めていくことができます。
+
+NixOS を実際に導入して各項目を設定していくなら以下の記事がおすすめです。Nix の性質や Nix Flakes、NixOS のインストール、IME・フォントの設定、ドライバ、Home Manager の導入、デメリットに至るまで細かく説明されています。この記事では Nix、NixOS 自体の詳細な説明は割愛していますので、こちらを参照してください。
+
+https://zenn.dev/asa1984/articles/nixos-is-the-best
 
 # momeemt/config
 
@@ -137,7 +222,7 @@ https://masawada.hatenablog.jp/entry/2022/09/09/234159
 
 momeemt/config[^config-naming] は、以下のようなディレクトリに分けています[^dir-ommision]。
 
-[^dir-ommision]: 説明が不要な一部のファイルやディレクトリは省略しています。また、これ以降に示すファイル、ディレクトリ一覧についても同様です。
+[^dir-ommision]: 説明が不要な一部のファイルやディレクトリは省略しています。また、これ以降に示すファイル、ディレクトリ一覧についても同様です
 [^config-naming]: 元々は `dotfiles` や `nixos-configuration` というリポジトリ名を使用していたのですが、扱うスコープが広くなったため `config` というアバウトな名前を使っています。このような設定ファイル集に充てる適切な名前をご存知の方がいらっしゃいましたら、ぜひ教えてください。
 
 ```sh
@@ -980,7 +1065,7 @@ https://github.com/momeemt/config/blob/develop/nix/lib/mkK8sMaster/main.sh
 
 
 
-## `k8s/`の構成
+## Kubernetes
 
 ## ✅ 2026年にやりたいこと
 
@@ -1037,5 +1122,3 @@ https://github.com/nix-community/nix-init
 もし私の dotfiles に興味を持っていただけた方は、ぜひリポジトリにスターを付けたり、コンテナイメージを試したり、コメントで感想を送ったりしていただければ励みになります！
 
 https://github.com/momeemt/config
-
-メリークリスマス、良いお年を。

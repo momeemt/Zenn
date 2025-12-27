@@ -466,8 +466,8 @@ Home Manager では `programs.zsh.dotDir` を適切に設定することで XDG 
 #### ディレクトリ候補の探索パスの追加
 
 `programs.zsh.cdpath` にパスを追加しておくと、`cd` の補完候補として探索されるディレクトリが増えます。
-私はリモートから入手した Git リポジトリを管理するツールとして [ghq](https://github.com/x-motemen/ghq) を使っています[^ghq-naming]。このツールは環境変数 `GHQ_ROOT` を設定することで[リポジトリを配置するパスを変更でき](https://github.com/x-motemen/ghq#environment-variables)、私は `$XDG_DATA_HOME/ghq` を指定しています。そのせいで新しく配置したリポジトリに移動するのが非常に面倒であり、楽にタイプするために `cdpath` に GitHub リポジトリ配下と、その中でも私のユーザ名のディレクトリ配下をしています。
-そうすることで、以下のように補完が効くようになり、インタラクティブシェル内での体験を改善できます。
+私はリモートから入手した Git リポジトリを管理するツールとして [ghq](https://github.com/x-motemen/ghq) を使っています[^ghq-naming]。このツールは環境変数 `GHQ_ROOT` を設定することで[リポジトリを配置するパスを変更でき](https://github.com/x-motemen/ghq#environment-variables)、私は `$XDG_DATA_HOME/ghq` を指定しています。そのせいで新しく配置したリポジトリに移動するのが非常に面倒であり、楽にタイプするために `cdpath` に GitHub リポジトリ配下と、その中でも私のユーザ名のディレクトリ配下を指定しています。
+そうすることで補完が効くようになり、インタラクティブシェル内での体験を改善できます。
 
 [^ghq-naming]: 断りなく会話に出すと知らない人からはギョッとされることが多いが、連合国軍最高司令官総司令部のことではない
 
@@ -719,7 +719,7 @@ VSCode の設定は、`programs.vscode.*` から行っています。拡張機�
 
 https://github.com/momeemt/config/blob/ef50a784a49fd04cc77a64e2122f7150a6328b56/nix/profiles/hm/programs/vscode/default.nix
 
-NixOS サーバ側には [nixos-vscode-server](https://github.com/nix-community/nixos-vscode-server) を入れています。これは VSCode Server が同梱する Node.js が NixOS ではそのまま動かないため、Node.js へのシンボリックリンクに書き換えるための flake で、VSCode から NixOS サーバに SSH 接続して作業するために入れています。最近ではもっぱら Neovim から作業を行っているので、あまり意識していませんでした。
+NixOS サーバ側には [nixos-vscode-server](https://github.com/nix-community/nixos-vscode-server) を入れています。NixOS では VSCode Server が同梱する Node.js が NixOS ではそのまま動かないため、Node.js へのシンボリックリンクに書き換える必要があります。nixos-vscode-server はそれを解決する flake で、VSCode から SSH 接続して作業するために入れています。最近ではもっぱら Neovim から作業を行っているので、あまり意識していませんでした。
 
 https://github.com/nix-community/nixos-vscode-server
 
@@ -960,7 +960,8 @@ https://brew.sh/
 1. GUI アプリケーションのインストール
 1. 別のアプリケーションをインストールするようなハブとなるアプリケーションのインストール
 
-まず、GUI アプリケーションですが、nixpkgs は基本的に macOS と比べて Linux を優先してパッケージングしています。ですから macOS のみをターゲットにしたアプリケーションや、そうでなくても Linux 版しか配布されていないアプリケーションは存在します。そこで、GUI アプリケーションをすでに多くのユーザに利用されておりいて知見が溜まっている [Homebrew Cask](https://github.com/Homebrew/homebrew-cask) によってインストールすることが考えられます。
+まず、GUI アプリケーションについて見ていきます。
+nixpkgs は基本的に macOS と比べて Linux を優先してサポートしています。その結果、Linux 版しか配布されていなかったり、macOS のみをターゲットにしたアプリケーションがそもそも入っていなかったりすることが多々あります。そこで、GUI アプリケーションについては nixpkgs からインストールするのではなく、すでに多くのユーザに利用されていて知見が溜まっている [Homebrew Cask](https://github.com/Homebrew/homebrew-cask) によってインストールすることが考えられます。
 しかし、[シェルの節](#プラグインマネージャ)で言及したように、別のパッケージマネージャを併用すると構成の差分や更新のタイミングが Nix の管理からは外れます。この問題を解決しつつ、Homebrew Cask を使用するために、[brew-nix](https://github.com/BatteredBunny/brew-nix) というツールが作られています。
 
 https://github.com/BatteredBunny/brew-nix

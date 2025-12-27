@@ -961,7 +961,8 @@ https://brew.sh/
 1. 別のアプリケーションをインストールするようなハブとなるアプリケーションのインストール
 
 まず、GUI アプリケーションについて見ていきます。
-nixpkgs は基本的に macOS と比べて Linux を優先してサポートしています。その結果、Linux 版しか配布されていなかったり、macOS のみをターゲットにしたアプリケーションがそもそも入っていなかったりすることが多々あります。そこで、GUI アプリケーションについては nixpkgs からインストールするのではなく、すでに多くのユーザに利用されていて知見が溜まっている [Homebrew Cask](https://github.com/Homebrew/homebrew-cask) によってインストールすることが考えられます。
+nixpkgs だけですべての GUI アプリケーションを揃えるのは、macOS では少し難しい場面があります。nixpkgs では Linux 版しか提供されていないアプリケーションがあることや、そもそも macOS のみに対応したアプリケーションを nixpkgs で扱われないことがあることなどが理由です。
+そこで GUI アプリケーションは、ユーザ数が多く知見が溜まっている [Homebrew Cask](https://github.com/Homebrew/homebrew-cask) を使ってインストールすることが考えられます。
 しかし、[シェルの節](#プラグインマネージャ)で言及したように、別のパッケージマネージャを併用すると構成の差分や更新のタイミングが Nix の管理からは外れます。この問題を解決しつつ、Homebrew Cask を使用するために、[brew-nix](https://github.com/BatteredBunny/brew-nix) というツールが作られています。
 
 https://github.com/BatteredBunny/brew-nix

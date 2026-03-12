@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m unittest:*)",
+      "Bash(python:*)",
+      "Bash(./hello:*)",
+      "Bash(./app)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nChapter 2 初期状態\n\n- src/minimake.py: TODO付きの雛形コード\n- project/: ビルド対象のサンプル \\(hello.c, build.json\\)\n- tests/: GitHub Actions用テストスクリプト\n- .github/workflows/chapter3.yml: CI設定\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git tag:*)",
+      "Bash(git commit --amend -m \"$\\(cat <<''EOF''\nChapter 3 初期状態\n\n- src/minimake.py: TODO付きの雛形コード\n- project/: ビルド対象のサンプル \\(hello.c, build.json\\)\n- tests/: GitHub Actions用テストスクリプト\n- .github/workflows/chapter3.yml: CI設定\nEOF\n\\)\")",
+      "Bash(PYTHONPATH=../src python:*)",
+      "Bash(bash:*)",
+      "Bash(gh run list:*)",
+      "Bash(git commit:*)",
+      "Bash(git reset:*)",
+      "Bash(git checkout:*)"
+    ]
+  }
+}

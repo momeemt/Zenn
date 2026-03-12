@@ -1,0 +1,17 @@
+title: "ビルドシステムを自作しよう"
+summary: "ビルドシステムを使っていますか？私たちが普段使うアプリケーションも、複雑なビルド工程を通して作られています。この本では、シンプルなビルドシステムを一から構築し、その仕組みを理解します。複雑なビルドに立ち向かいましょう！"
+topics: [ビルドシステム, 自作]
+published: false
+price: 0 # 有料の場合200〜5000
+# 本に含めるチャプターを順番に並べましょう
+chapters:
+  - intro
+  - build-system
+  - simple-build
+  - resolve-deps
+  - incremental-build
+  - auto-resolve-deps
+  - lockfiles
+  - cache
+  - distributed-build
+  - reproducible-build

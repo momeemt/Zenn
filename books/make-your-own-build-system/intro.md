@@ -66,6 +66,12 @@ $ git clone https://github.com/<YOUR_USERNAME>/minimake.git
 $ cd minimake
 ```
 
+4. タグを取得します
+
+```bash
+$ git fetch --tags
+```
+
 各章の実装を始める前に、対応するタグから新しいブランチを作成して作業することをお勧めします。
 
 ```bash
@@ -81,6 +87,10 @@ $ git push -u origin my-chapter3
 ```
 
 プッシュ後、GitHub のリポジトリページで Actions タブを開くと、テストの実行結果を確認できます。
+
+:::message
+フォークしたリポジトリでは、GitHub Actions がデフォルトで無効になっています。初めて Actions タブを開いたときに表示される "I understand my workflows, go ahead and enable them" ボタンをクリックして有効化してください。
+:::
 
 また、各章の模範解答を確認したい場合は、以下のようにします。
 

@@ -4,10 +4,10 @@ title: "自動依存解決"
 
 ## 準備
 
-この章の実装を始める前に、以下のコマンドで初期状態に移動してください。
+この章の実装を始める前に、以下のコマンドで初期状態からブランチを作成してください。
 
 ```bash
-$ git checkout chapter6-begin
+$ git switch -c my-chapter6 chapter6-begin
 ```
 
 ---
@@ -398,5 +398,5 @@ function getImports(fileName: string): string[] {
 この章の模範解答を確認したい場合は、以下のコマンドを実行してください。
 
 ```bash
-$ git checkout chapter6-end
+$ git switch --detach chapter6-end
 ```

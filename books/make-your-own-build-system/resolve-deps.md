@@ -4,10 +4,10 @@ title: "依存関係を解決する"
 
 ## 準備
 
-この章の実装を始める前に、以下のコマンドで初期状態に移動してください。
+この章の実装を始める前に、以下のコマンドで初期状態からブランチを作成してください。
 
 ```bash
-$ git checkout chapter4-begin
+$ git switch -c my-chapter4 chapter4-begin
 ```
 
 ---
@@ -90,6 +90,36 @@ main ───┼─ b.o ─┼─── app
 
 ポイントは依存先を先に処理するところです。これにより、自然と正しい順序が得られます。
 
+### 具体例
+
+`hello` → `hello.o` という依存関係で、`hello` をビルドする場合を考えます。
+
+```
+visit("hello") を呼び出す
+  ├─ "hello" の依存先 ["hello.o"] を取得
+  ├─ visit("hello.o") を再帰呼び出し
+  │    ├─ "hello.o" の依存先 [] を取得（空）
+  │    ├─ 依存先がないので、何もしない
+  │    └─ "hello.o" を order に追加 → order = ["hello.o"]
+  └─ "hello" を order に追加 → order = ["hello.o", "hello"]
+```
+
+再帰呼び出しから戻ってきたタイミングで `order` に追加するので、依存先が先にリストに入ります。これがトポロジカルソートの仕組みです。
+
+もう少し複雑な例として、`app` が `a.o` と `b.o` に依存している場合を見てみましょう。
+
+```
+visit("app") を呼び出す
+  ├─ "app" の依存先 ["a.o", "b.o"] を取得
+  ├─ visit("a.o") を再帰呼び出し
+  │    └─ "a.o" を order に追加 → order = ["a.o"]
+  ├─ visit("b.o") を再帰呼び出し
+  │    └─ "b.o" を order に追加 → order = ["a.o", "b.o"]
+  └─ "app" を order に追加 → order = ["a.o", "b.o", "app"]
+```
+
+依存先をすべて処理してから自分自身を追加するので、正しいビルド順序になります。
+
 ## 課題: トポロジカルソートの実装
 
 依存関係を解決し、ビルド順序を返す関数を実装してください。
@@ -122,7 +152,10 @@ def resolve_build_order(config: dict, target: str) -> list[str]:
         visiting.add(t)
 
         # TODO: 依存先を再帰的に処理してください
-        # ヒント: targets[t].get("deps", []) で依存先のリストを取得できます
+        #
+        # ヒント 1: targets[t].get("deps", []) で依存先のリストを取得できます
+        # ヒント 2: 依存先のリストを for ループで回して、各依存先に対して visit() を呼び出します
+        # ヒント 3: 必要なコードは2行だけです
 
         visiting.remove(t)
         visited.add(t)
@@ -131,6 +164,14 @@ def resolve_build_order(config: dict, target: str) -> list[str]:
     visit(target)
     return order
 ```
+
+:::message
+`visited` と `visiting` の違いに注目してください。
+- `visited`: 処理が完了したターゲット（もう二度と処理しない）
+- `visiting`: 現在処理中のターゲット（再帰呼び出しの途中）
+
+`visiting` に含まれるターゲットに再度到達した場合、それは循環依存を意味します。
+:::
 
 :::details 解答例
 ```python
@@ -165,6 +206,16 @@ def resolve_build_order(config: dict, target: str) -> list[str]:
 :::
 
 コードは短いですが、再帰を使うことで、依存先を先に処理するという要件を自然に実現できています。
+
+:::message
+なぜこのアルゴリズムが正しく動くのでしょうか？
+
+1. `visit(dep)` を呼び出すと、その依存先がすべて `order` に追加されるまで戻ってきません
+2. すべての `visit(dep)` が完了してから、自分自身を `order` に追加します
+3. したがって、依存先は必ず自分より前に `order` に入ります
+
+これが再帰の力です。複雑な依存関係も、この単純なルールの繰り返しで正しく処理できます。
+:::
 
 ### 循環依存の検出
 
@@ -380,5 +431,5 @@ Hello, minimake!
 この章の模範解答を確認したい場合は、以下のコマンドを実行してください。
 
 ```bash
-$ git checkout chapter4-end
+$ git switch --detach chapter4-end
 ```

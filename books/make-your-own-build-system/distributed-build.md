@@ -4,10 +4,10 @@ title: "並列ビルド"
 
 ## 準備
 
-この章の実装を始める前に、以下のコマンドで初期状態に移動してください。
+この章の実装を始める前に、以下のコマンドで初期状態からブランチを作成してください。
 
 ```bash
-$ git checkout chapter9-begin
+$ git switch -c my-chapter9 chapter9-begin
 ```
 
 ---
@@ -362,5 +362,5 @@ $$
 この章の模範解答を確認したい場合は、以下のコマンドを実行してください。
 
 ```bash
-$ git checkout chapter9-end
+$ git switch --detach chapter9-end
 ```

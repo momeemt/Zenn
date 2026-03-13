@@ -76,8 +76,7 @@ $ git fetch --tags
 
 ```bash
 # 例: 第3章の初期状態からブランチを作成
-$ git checkout chapter3-begin
-$ git checkout -b my-chapter3
+$ git switch -c my-chapter3 chapter3-begin
 ```
 
 実装が完了したら、フォークしたリポジトリにプッシュしてください。GitHub Actions が自動的にテストを実行し、実装が正しいかどうかを確認できます。
@@ -96,7 +95,7 @@ $ git push -u origin my-chapter3
 
 ```bash
 # 例: 第3章の模範解答を確認
-$ git checkout chapter3-end
+$ git switch --detach chapter3-end
 ```
 
 ### GCC のインストール

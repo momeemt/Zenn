@@ -4,10 +4,10 @@ title: "ロックファイル"
 
 ## 準備
 
-この章の実装を始める前に、以下のコマンドで初期状態に移動してください。
+この章の実装を始める前に、以下のコマンドで初期状態からブランチを作成してください。
 
 ```bash
-$ git checkout chapter7-begin
+$ git switch -c my-chapter7 chapter7-begin
 ```
 
 ---
@@ -376,5 +376,5 @@ def download_dependency(name: str, version: str, checksum: str) -> Path:
 この章の模範解答を確認したい場合は、以下のコマンドを実行してください。
 
 ```bash
-$ git checkout chapter7-end
+$ git switch --detach chapter7-end
 ```

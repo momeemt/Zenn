@@ -289,7 +289,7 @@ def verify_lockfile(lockfile: dict) -> list[str]:
     return errors
 ```
 
-## main.py への統合
+## main 関数への統合
 
 サブコマンドとして `lock` と `verify` を追加します。
 

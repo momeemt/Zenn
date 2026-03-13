@@ -228,7 +228,7 @@ void greet(const char *name);
 
 自動依存解決を実行すると、`main.o` の `inputs` が自動的に `["main.c", "greet.h", "config.h"]` に設定されます。
 
-## main.py への統合
+## main 関数への統合
 
 起動時に自動依存解決を実行するようにします。
 

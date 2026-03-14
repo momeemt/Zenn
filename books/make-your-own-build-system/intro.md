@@ -65,10 +65,11 @@ $ git clone https://github.com/<YOUR_USERNAME>/minimake.git
 $ cd minimake
 ```
 
-4. タグを取得します
+4. 元のリポジトリを upstream として追加し、タグを取得します
 
 ```bash
-$ git fetch --tags
+$ git remote add upstream https://github.com/momeemt/minimake.git
+$ git fetch upstream --tags
 ```
 
 各章の実装を始める前に、対応するタグから新しいブランチを作成して作業することをお勧めします。

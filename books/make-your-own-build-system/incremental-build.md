@@ -10,6 +10,8 @@ title: "インクリメンタルビルド"
 $ git switch -c my-chapter5 chapter5-begin
 ```
 
+前章と同様に、実装は `src/minimake.py` を編集し、動作確認は `project/` ディレクトリで行います。
+
 ---
 
 前章までで、依存関係を解決して正しい順序でビルドできるようになりました。しかし、現在の実装には大きな問題があります。毎回すべてのターゲットを再ビルドしていることです。
@@ -148,8 +150,10 @@ def build_target(config: dict, target: str) -> bool:
 更新した `build.json` で試してみましょう。
 
 ```bash
+$ cd project
+
 # 最初のビルド - すべてのターゲットがビルドされる
-$ python minimake.py hello
+$ python ../src/minimake.py hello
 Build order: hello.o -> hello
 Building hello.o...
   $ gcc -c -o hello.o hello.c
@@ -157,7 +161,7 @@ Building hello...
   $ gcc -o hello hello.o
 
 # 2回目のビルド - 何も変更していないのでスキップされる
-$ python minimake.py hello
+$ python ../src/minimake.py hello
 Build order: hello.o -> hello
 Skipping hello.o (up to date)
 Skipping hello (up to date)
@@ -166,7 +170,7 @@ Skipping hello (up to date)
 $ touch hello.c
 
 # 3回目のビルド - hello.c が変更されたので hello.o が再ビルドされる
-$ python minimake.py hello
+$ python ../src/minimake.py hello
 Build order: hello.o -> hello
 Building hello.o...
   $ gcc -c -o hello.o hello.c

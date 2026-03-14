@@ -10,6 +10,8 @@ title: "ロックファイル"
 $ git switch -c my-chapter7 chapter7-begin
 ```
 
+前章と同様に、実装は `src/minimake.py` を編集し、動作確認は `project/` ディレクトリで行います。
+
 ---
 
 :::message

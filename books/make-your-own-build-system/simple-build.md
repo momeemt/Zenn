@@ -10,6 +10,20 @@ title: "シンプルなビルドの実行"
 $ git switch -c my-chapter3 chapter3-begin
 ```
 
+リポジトリのディレクトリ構造は以下のようになっています。
+
+```
+minimake/
+├── src/
+│   └── minimake.py    # ビルドシステムのソースコード
+├── project/
+│   ├── build.json     # ビルド定義ファイル
+│   └── hello.c        # ビルド対象のCプログラム
+└── tests/             # テストファイル
+```
+
+実装は `src/minimake.py` を編集し、動作確認は `project/` ディレクトリで行います。
+
 ---
 
 この章では、minimake の最初のバージョンを作ります。まずは JSON で定義されたターゲットをビルドするというシンプルな機能から始めます。
@@ -221,11 +235,12 @@ int main(void) {
 ターミナルで実行します。
 
 ```bash
-$ python minimake.py hello.o
+$ cd project
+$ python ../src/minimake.py hello.o
 Building hello.o...
   $ gcc -c -o hello.o hello.c
 
-$ python minimake.py hello
+$ python ../src/minimake.py hello
 Building hello...
   $ gcc -o hello hello.o
 
@@ -243,11 +258,11 @@ Hello, minimake!
 
 ```bash
 # 正しい順序
-$ python minimake.py hello.o
-$ python minimake.py hello
+$ python ../src/minimake.py hello.o
+$ python ../src/minimake.py hello
 
 # 間違った順序 - hello.o がないのでリンクに失敗
-$ python minimake.py hello
+$ python ../src/minimake.py hello
 Building hello...
   $ gcc -o hello hello.o
 /usr/bin/ld: cannot find hello.o: No such file or directory
@@ -308,7 +323,7 @@ if __name__ == "__main__":
 これで、次のように実行できます。
 
 ```bash
-$ python minimake.py hello.o hello
+$ python ../src/minimake.py hello.o hello
 Building hello.o...
   $ gcc -c -o hello.o hello.c
 Building hello...

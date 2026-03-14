@@ -10,6 +10,8 @@ title: "自動依存解決"
 $ git switch -c my-chapter6 chapter6-begin
 ```
 
+前章と同様に、実装は `src/minimake.py` を編集し、動作確認は `project/` ディレクトリで行います。
+
 ---
 
 :::message

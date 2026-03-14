@@ -10,9 +10,11 @@ title: "依存関係を解決する"
 $ git switch -c my-chapter4 chapter4-begin
 ```
 
+前章と同様に、実装は `src/minimake.py` を編集し、動作確認は `project/` ディレクトリで行います。
+
 ---
 
-前章では、ターゲットを手動で正しい順序で指定する必要がありました。`python minimake.py hello.o hello` のように、依存先を先に書かなければなりませんでした。
+前章では、ターゲットを手動で正しい順序で指定する必要がありました。`python ../src/minimake.py hello.o hello` のように、依存先を先に書かなければなりませんでした。
 
 ファイルが2つならまだよいですが、100個あった場合、正しい順序を覚えておくのは不可能です。この章では、ビルド定義に依存関係を記述し、自動的に正しい順序でビルドする機能を実装します。
 
@@ -307,7 +309,8 @@ if __name__ == "__main__":
 ```
 
 ```bash
-$ python minimake.py hello
+$ cd project
+$ python ../src/minimake.py hello
 Build order: hello.o -> hello
 Building hello.o...
   $ gcc -c -o hello.o hello.c
@@ -332,7 +335,7 @@ Building hello...
 ```
 
 ```bash
-$ python minimake.py a
+$ python ../src/minimake.py a
 Error: Circular dependency detected: a
 ```
 
@@ -398,7 +401,7 @@ void greet(const char *name) {
 ```
 
 ```bash
-$ python minimake.py app
+$ python ../src/minimake.py app
 Build order: main.o -> greet.o -> app
 Building main.o...
   $ gcc -c -o main.o main.c

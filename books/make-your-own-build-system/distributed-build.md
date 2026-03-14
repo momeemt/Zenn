@@ -10,6 +10,8 @@ title: "並列ビルド"
 $ git switch -c my-chapter9 chapter9-begin
 ```
 
+前章と同様に、実装は `src/minimake.py` を編集し、動作確認は `project/` ディレクトリで行います。
+
 ---
 
 :::message
@@ -190,8 +192,10 @@ def parallel_build(config: dict, target: str, max_workers: int = None) -> bool:
 ```
 
 ```bash
+$ cd project
+
 # 逐次ビルド（約4秒）
-$ time python minimake.py result.txt
+$ time python ../src/minimake.py result.txt
 Building a.txt...
 Building b.txt...
 Building c.txt...
@@ -199,7 +203,7 @@ Building result.txt...
 real    0m4.05s
 
 # 並列ビルド（約2秒）
-$ time python minimake.py --parallel result.txt
+$ time python ../src/minimake.py --parallel result.txt
 Build levels: 2, Max parallelism: 4
 
 === Level 0: ['a.txt', 'b.txt', 'c.txt'] ===
@@ -260,10 +264,10 @@ def main():
 
 ```bash
 # デフォルトのワーカー数で並列ビルド
-$ python minimake.py --parallel app
+$ python ../src/minimake.py --parallel app
 
 # ワーカー数を指定（Make と同じ構文）
-$ python minimake.py -j 4 app
+$ python ../src/minimake.py -j 4 app
 ```
 
 ## スレッドセーフな出力

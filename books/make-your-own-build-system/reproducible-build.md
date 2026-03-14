@@ -10,6 +10,8 @@ title: "再現可能なビルド"
 $ git switch -c my-chapter10 chapter10-begin
 ```
 
+前章と同様に、実装は `src/minimake.py` を編集し、動作確認は `project/` ディレクトリで行います。
+
 ---
 
 :::message
